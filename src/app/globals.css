@@ -1,26 +1,11 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@theme {
+  --color-primary: #4f46e5;  //Core call-to-action (CTA) buttons, active navigation states, key interactive controls, focus rings, primary links.
+  --color-primary-accent: #7c3aed; //Hover/focus states for primary elements, gradient accents (paired with primary), secondary highlights, active badges.
+  --color-slate-dark: #0f172a;  //Primary body text(h1, h2, h3), main headings, high-contrast UI elements in light mode.
+  --color-bg-offwhite: #f8fafc; //Main application canvas/page background in light mode.
+  --color-bg-coolgray: #f1f5f9; //Card backgrounds, sidebar containers, table row alt-striping, subtle dividers, disabled button backgrounds.
+  --color-ai-emerald: #10b981;  //Positive metrics, success states, completed tasks, AI confidence scores, high-value highlights.
+  --color-ai-cyan: #06b6d4;  //Secondary AI features, informative badges, active processing states, secondary tech highlights.
 }
