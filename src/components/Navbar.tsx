@@ -1,338 +1,308 @@
-// "use client";
+'use client';
 
-// import Link from "next/link";
-// import { usePathname, useRouter } from "next/navigation";
-// import { useState, useEffect } from "react";
-// // import { useAuth } from "@/providers/auth-provider";
-// import {
-//   Menu,
-//   X,
-//   Sparkles,
-//   LogOut,
-//   LayoutDashboard,
-//   ChevronDown,
-//   FileText,
-//   TrendingUp,
-//   MessageCircle,
-//   Briefcase,
-//   BookOpen,
-//   BarChart3,
-//   ArrowRight,
-// } from "lucide-react";
+import React, { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
+import { 
+  Sparkles, 
+  Menu, 
+  X, 
+  ArrowRight, 
+  ChevronDown, 
+  LayoutDashboard, 
+  FileText, 
+  Sliders, 
+  LogOut, 
+  Zap, 
+  CheckCircle2,
+  Bot
+} from 'lucide-react';
 
-// const publicLinks = [
-//   { href: "/", label: "Home" },
-//   { href: "/jobs", label: "Jobs" },
-//   { href: "/blog", label: "Blog" },
-//   { href: "/about", label: "About" },
-//   { href: "/contact", label: "Contact" },
-// ];
+export default function Navbar(): React.JSX.Element {
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+  const userDropdownRef = useRef<HTMLDivElement>(null);
 
-// const featureLinks = [
-//   { href: "/resume/analyze", label: "Resume Analyzer", desc: "ATS scores & fixes", icon: FileText },
-//   { href: "/recommendations", label: "Recommendations", desc: "AI-matched jobs", icon: TrendingUp },
-//   { href: "/chat", label: "Career Chat", desc: "Talk to your AI mentor", icon: MessageCircle },
-//   { href: "/interview", label: "Interview Prep", desc: "Practice & feedback", icon: Briefcase },
-//   { href: "/roadmap", label: "Learning Roadmap", desc: "Personalized plans", icon: BookOpen },
-//   { href: "/skills", label: "Skill Assessment", desc: "Find your gaps", icon: BarChart3 },
-// ];
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
-// function isActive(pathname: string, href: string) {
-//   if (href === "/") return pathname === "/";
-//   return pathname === href || pathname.startsWith(href + "/");
-// }
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userDropdownRef.current && !userDropdownRef.current.contains(event.target as Node)) {
+        setIsUserDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
-// export default function Navbar() {
-//   const pathname = usePathname();
-//   const router = useRouter();
-// //   const { isAuthenticated, user, logout } = useAuth();
-//   const [open, setOpen] = useState(false);
-//   const [scrolled, setScrolled] = useState(false);
-//   const [featuresOpen, setFeaturesOpen] = useState(false);
-//   const [userOpen, setUserOpen] = useState(false);
-//   const [mounted, setMounted] = useState(false);
+  return (
+    <header
+      className={`sticky top-0 z-50 w-full transition-all duration-300 ${
+        isScrolled
+          ? 'bg-[#08090c]/90 backdrop-blur-xl border-b border-white/[0.08] shadow-[0_10px_30px_rgba(0,0,0,0.8)] py-3'
+          : 'bg-[#08090c] border-b border-white/[0.05] py-4'
+      }`}
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between">
+          
+          {/* Brand Logo */}
+          <Link href="/" className="flex items-center gap-2.5 group shrink-0">
+            <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-[#FFE600] text-black shadow-[0_0_20px_rgba(255,230,0,0.35)] transition-transform group-hover:scale-105">
+              <Bot className="w-5 h-5 stroke-[2.5]" />
+            </div>
+            <span className="font-extrabold text-xl tracking-tight text-white">
+              ResuMate<span className="text-[#FFE600]">.AI</span>
+            </span>
+          </Link>
 
-//   useEffect(() => {
-//     setMounted(true);
-//   }, []);
+          {/* Desktop Navigation Links */}
+          <nav className="hidden lg:flex items-center gap-8">
+            <Link
+              href="/"
+              className="text-sm font-medium text-white hover:text-[#FFE600] transition-colors"
+            >
+              Home
+            </Link>
+            <Link
+              href="#tools"
+              className="text-sm font-medium text-gray-300 hover:text-[#FFE600] transition-colors"
+            >
+              Tools
+            </Link>
+            <Link
+              href="#how-it-works"
+              className="text-sm font-medium text-gray-300 hover:text-[#FFE600] transition-colors"
+            >
+              How It Works
+            </Link>
+            <Link
+              href="#features"
+              className="text-sm font-medium text-gray-300 hover:text-[#FFE600] transition-colors"
+            >
+              Features
+            </Link>
+            <Link
+              href="#testimonials"
+              className="text-sm font-medium text-gray-300 hover:text-[#FFE600] transition-colors"
+            >
+              Testimonials
+            </Link>
+            <Link
+              href="#cta"
+              className="text-sm font-medium text-gray-300 hover:text-[#FFE600] transition-colors"
+            >
+              Contact
+            </Link>
+          </nav>
 
-//   useEffect(() => {
-//     const onScroll = () => setScrolled(window.scrollY > 12);
-//     window.addEventListener("scroll", onScroll);
-//     return () => window.removeEventListener("scroll", onScroll);
-//   }, []);
+          {/* Desktop Actions (Auth state toggle) */}
+          <div className="hidden sm:flex items-center gap-4">
+            {!isLoggedIn ? (
+              <div className="flex items-center gap-4">
+                <button
+                  type="button"
+                  onClick={() => setIsLoggedIn(true)}
+                  className="text-sm font-medium text-gray-300 hover:text-white transition-colors cursor-pointer px-2 py-1"
+                >
+                  Login
+                </button>
+                <Link
+                  href="#cta"
+                  className="relative group overflow-hidden inline-flex items-center gap-2 px-5 py-2.5 bg-[#FFE600] hover:bg-[#FFD000] text-black font-bold rounded-xl shadow-[0_0_20px_rgba(255,230,0,0.3)] hover:shadow-[0_0_30px_rgba(255,230,0,0.5)] transition-all active:scale-[0.98] text-sm"
+                >
+                  <span>Get Started</span>
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+                </Link>
+              </div>
+            ) : (
+              /* Authenticated User Menu */
+              <div className="relative" ref={userDropdownRef}>
+                <button
+                  type="button"
+                  onClick={() => setIsUserDropdownOpen((prev) => !prev)}
+                  className="flex items-center gap-2 p-1.5 rounded-xl bg-[#141519] border border-white/[0.1] hover:border-[#FFE600]/60 transition-all cursor-pointer focus:outline-none"
+                  aria-label="User menu"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-[#FFE600] flex items-center justify-center text-black font-black text-xs">
+                    JD
+                  </div>
+                  <span className="text-xs font-semibold text-gray-200 pl-1 pr-0.5">John D.</span>
+                  <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+                </button>
 
-// //   const showAuthed = mounted && isAuthenticated;
+                {/* Dropdown Menu */}
+                {isUserDropdownOpen && (
+                  <div className="absolute right-0 mt-2.5 w-56 rounded-2xl bg-[#121316] border border-white/[0.1] shadow-[0_20px_50px_rgba(0,0,0,0.9)] py-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+                    <div className="px-4 py-2 border-b border-white/[0.08] mb-1">
+                      <p className="text-xs font-semibold text-white">John Doe</p>
+                      <p className="text-[11px] text-gray-400 truncate">john.doe@example.com</p>
+                    </div>
 
-//   useEffect(() => {
-//     setOpen(false);
-//     setFeaturesOpen(false);
-//     setUserOpen(false);
-//   }, [pathname]);
+                    <Link
+                      href="/dashboard"
+                      className="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-gray-300 hover:bg-white/[0.06] hover:text-[#FFE600] transition-colors"
+                      onClick={() => setIsUserDropdownOpen(false)}
+                    >
+                      <LayoutDashboard className="w-4 h-4 text-[#FFE600]" />
+                      Candidate Dashboard
+                    </Link>
 
-// //   const initial = (user?.fullname || user?.email || "?").charAt(0).toUpperCase();
+                    <Link
+                      href="/resumes"
+                      className="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-gray-300 hover:bg-white/[0.06] hover:text-[#FFE600] transition-colors"
+                      onClick={() => setIsUserDropdownOpen(false)}
+                    >
+                      <FileText className="w-4 h-4 text-[#FFE600]" />
+                      Saved Resumes (4)
+                    </Link>
 
-//   return (
-//     <header
-//       className={`sticky top-0 z-50 w-full transition-all duration-300 ${
-//         scrolled
-//           ? "bg-[#2d2d2d]/80 backdrop-blur-lg border-b border-[#444444]/70 shadow-[0_4px_24px_-12px_rgba(255,234,0,0.25)]"
-//           : "bg-[#2d2d2d]/60 backdrop-blur-md border-b border-transparent"
-//       }`}
-//     >
-//       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-//         <Link href="/" className="group flex items-center gap-2.5">
-//           <span className="relative grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-[#ffea00] via-[#ffd700] to-[#ffea00] text-[#1a1a1a] shadow-lg shadow-[#ffea00]/30 transition-transform group-hover:scale-105">
-//             <Sparkles className="h-5 w-5" />
-//             <span className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#ffea00] to-[#ffd700] opacity-0 blur transition-opacity group-hover:opacity-60" />
-//           </span>
-//           <span className="text-lg font-extrabold tracking-tight text-[#e0e0e0]">
-//             AI<span className="text-[#ffea00]">Career</span>
-//             <span className="text-[#ffd700]">Mentor</span>
-//           </span>
-//         </Link>
+                    <Link
+                      href="/settings"
+                      className="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-gray-300 hover:bg-white/[0.06] hover:text-[#FFE600] transition-colors"
+                      onClick={() => setIsUserDropdownOpen(false)}
+                    >
+                      <Sliders className="w-4 h-4 text-[#FFE600]" />
+                      AI Preferences
+                    </Link>
 
-//         <div className="hidden lg:flex items-center gap-1">
-//           {publicLinks.map((l) => (
-//             <Link
-//               key={l.href}
-//               href={l.href}
-//               className={`relative px-3.5 py-2 text-sm font-medium rounded-lg transition-colors ${
-//                 isActive(pathname, l.href)
-//                   ? "text-[#ffea00]"
-//                   : "text-[#aaaaaa] hover:text-[#ffea00]"
-//               }`}
-//             >
-//               {l.label}
-//               {isActive(pathname, l.href) && (
-//                 <span className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-gradient-to-r from-[#ffea00] to-[#ffd700]" />
-//               )}
-//             </Link>
-//           ))}
+                    <div className="my-1 border-t border-white/[0.08]" />
 
-//           <div
-//             className="relative"
-//             onMouseEnter={() => setFeaturesOpen(true)}
-//             onMouseLeave={() => setFeaturesOpen(false)}
-//           >
-//             <button
-//               className={`flex items-center gap-1 px-3.5 py-2 text-sm font-medium rounded-lg transition-colors ${
-//                 pathname.startsWith("/resume") ||
-//                 pathname.startsWith("/recommend") ||
-//                 pathname.startsWith("/chat") ||
-//                 pathname.startsWith("/interview") ||
-//                 pathname.startsWith("/roadmap") ||
-//                 pathname.startsWith("/skills")
-//                   ? "text-[#ffea00]"
-//                   : "text-[#aaaaaa] hover:text-[#ffea00]"
-//               }`}
-//             >
-//               Features
-//               <ChevronDown className={`h-4 w-4 transition-transform ${featuresOpen ? "rotate-180" : ""}`} />
-//             </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsLoggedIn(false);
+                        setIsUserDropdownOpen(false);
+                      }}
+                      className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-rose-400 hover:bg-rose-500/10 transition-colors text-left cursor-pointer"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Sign Out
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
 
-//             <div
-//               className={`absolute left-1/2 top-full z-50 mt-2 w-[34rem] -translate-x-1/2 transition-all duration-200 ${
-//                 featuresOpen
-//                   ? "visible opacity-100 translate-y-0"
-//                   : "invisible opacity-0 -translate-y-1"
-//               }`}
-//             >
-//               <div className="rounded-2xl border border-[#444444] bg-[#2d2d2d] p-3 shadow-2xl shadow-[#ffea00]/10">
-//                 <div className="grid grid-cols-2 gap-1">
-//                   {featureLinks.map((f) => {
-//                     const Icon = f.icon;
-//                     return (
-//                       <Link
-//                         key={f.href}
-//                         href={f.href}
-//                         className="group/item flex items-start gap-3 rounded-xl p-3 transition-colors hover:bg-[#333333]"
-//                       >
-//                         <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#333333] text-[#ffea00] transition-colors group-hover/item:bg-[#ffea00] group-hover/item:text-[#1a1a1a]">
-//                           <Icon className="h-4.5 w-4.5" />
-//                         </span>
-//                         <span>
-//                           <span className="block text-sm font-semibold text-[#e0e0e0]">{f.label}</span>
-//                           <span className="block text-xs text-[#888888]">{f.desc}</span>
-//                         </span>
-//                       </Link>
-//                     );
-//                   })}
-//                 </div>
-//                 <Link
-//                   href="/features"
-//                   className="mt-1 flex items-center justify-center gap-1 rounded-xl bg-[#333333] py-2.5 text-sm font-medium text-[#ffea00] hover:bg-[#444444]"
-//                 >
-//                   View all features <ArrowRight className="h-4 w-4" />
-//                 </Link>
-//               </div>
-//             </div>
-//           </div>
-//         </div>
+            {/* Mobile menu toggle */}
+            <button
+              type="button"
+              onClick={() => setIsMobileMenuOpen((prev) => !prev)}
+              className="lg:hidden p-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-gray-300 hover:text-white"
+              aria-label="Toggle navigation menu"
+            >
+              {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
 
-//         <div className="hidden lg:flex items-center gap-2">
-//           {/* {showAuthed ? (
-//             <div className="relative" onMouseEnter={() => setUserOpen(true)} onMouseLeave={() => setUserOpen(false)}>
-//               <button className="flex items-center gap-2 rounded-full border border-[#444444] py-1 pl-1 pr-2.5 hover:border-[#ffea00] transition-colors">
-//                 {user?.avatar ? (
-//                   <img
-//                     src={user.avatar}
-//                     alt={user?.fullname || "User"}
-//                     referrerPolicy="no-referrer"
-//                     className="h-8 w-8 rounded-full object-cover"
-//                   />
-//                 ) : (
-//                   <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-[#ffea00] to-[#ffd700] text-sm font-bold text-[#1a1a1a]">
-//                     {initial}
-//                   </span>
-//                 )}
-//                 <span className="text-sm font-medium text-[#aaaaaa] max-w-[8rem] truncate">
-//                   {user?.fullname?.split(" ")[0] || "Account"}
-//                 </span>
-//                 <ChevronDown className="h-4 w-4 text-[#888888]" />
-//               </button>
-//               <div
-//                 className={`absolute right-0 top-full z-50 mt-2 w-52 transition-all duration-200 ${
-//                   userOpen ? "visible opacity-100 translate-y-0" : "invisible opacity-0 -translate-y-1"
-//                 }`}
-//               >
-//                 <div className="rounded-xl border border-[#444444] bg-[#2d2d2d] p-1.5 shadow-2xl shadow-[#ffea00]/10">
-//                   <Link
-//                     href="/dashboard"
-//                     className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-[#aaaaaa] hover:bg-[#333333] hover:text-[#ffea00]"
-//                   >
-//                     <LayoutDashboard className="h-4 w-4" /> Dashboard
-//                   </Link>
-//                   <button
-//                     onClick={() => {
-//                       logout();
-//                       router.push("/");
-//                     }}
-//                     className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-400 hover:bg-[#333333]"
-//                   >
-//                     <LogOut className="h-4 w-4" /> Logout
-//                   </button>
-//                 </div>
-//               </div>
-//             </div>
-//           ) : ( */}
-//             <>
-//               <Link
-//                 href="/login"
-//                 className="px-4 py-2 text-sm font-semibold text-[#aaaaaa] rounded-lg hover:bg-[#333333] transition-colors"
-//               >
-//                 Login
-//               </Link>
-//               <Link
-//                 href="/register"
-//                 className="group relative inline-flex items-center gap-1 overflow-hidden rounded-lg bg-gradient-to-r from-[#ffea00] to-[#ffd700] px-4 py-2 text-sm font-semibold text-[#1a1a1a] shadow-md shadow-[#ffea00]/30 transition-transform hover:scale-[1.03]"
-//               >
-//                 Get Started
-//                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-//               </Link>
-//             </>
-//           {/* )} */}
-//         </div>
+          {/* Small screen mobile toggle if not authenticated */}
+          <div className="flex sm:hidden items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsMobileMenuOpen((prev) => !prev)}
+              className="p-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-gray-300 hover:text-white"
+              aria-label="Toggle navigation menu"
+            >
+              {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
 
-//         <button
-//           className="lg:hidden grid h-10 w-10 place-items-center rounded-lg text-[#aaaaaa] hover:bg-[#333333]"
-//           onClick={() => setOpen(!open)}
-//           aria-label="Toggle menu"
-//         >
-//           {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-//         </button>
-//       </nav>
+        </div>
+      </div>
 
-//       {open && (
-//         <div className="lg:hidden border-t border-[#444444] bg-[#2d2d2d]/95 backdrop-blur-lg">
-//           <div className="max-h-[calc(100vh-4rem)] overflow-y-auto px-4 py-4 space-y-1">
-//             {publicLinks.map((l) => (
-//               <Link
-//                 key={l.href}
-//                 href={l.href}
-//                 className={`block rounded-lg px-3 py-2.5 text-sm font-medium ${
-//                   isActive(pathname, l.href)
-//                     ? "bg-[#333333] text-[#ffea00]"
-//                     : "text-[#aaaaaa] hover:bg-[#333333]"
-//                 }`}
-//               >
-//                 {l.label}
-//               </Link>
-//             ))}
+      {/* Mobile Drawer */}
+      {isMobileMenuOpen && (
+        <div className="lg:hidden border-t border-white/[0.08] bg-[#08090c]/98 backdrop-blur-2xl px-4 py-5 space-y-4 animate-in slide-in-from-top duration-200">
+          <div className="space-y-1">
+            <Link 
+              href="/" 
+              className="block px-3 py-2.5 rounded-xl text-sm font-medium text-white hover:bg-white/[0.06] hover:text-[#FFE600]"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Home
+            </Link>
+            <Link 
+              href="#tools" 
+              className="block px-3 py-2.5 rounded-xl text-sm font-medium text-gray-300 hover:bg-white/[0.06] hover:text-[#FFE600]"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Tools
+            </Link>
+            <Link 
+              href="#how-it-works" 
+              className="block px-3 py-2.5 rounded-xl text-sm font-medium text-gray-300 hover:bg-white/[0.06] hover:text-[#FFE600]"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              How It Works
+            </Link>
+            <Link 
+              href="#features" 
+              className="block px-3 py-2.5 rounded-xl text-sm font-medium text-gray-300 hover:bg-white/[0.06] hover:text-[#FFE600]"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Features
+            </Link>
+            <Link 
+              href="#testimonials" 
+              className="block px-3 py-2.5 rounded-xl text-sm font-medium text-gray-300 hover:bg-white/[0.06] hover:text-[#FFE600]"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Testimonials
+            </Link>
+            <Link 
+              href="#cta" 
+              className="block px-3 py-2.5 rounded-xl text-sm font-medium text-gray-300 hover:bg-white/[0.06] hover:text-[#FFE600]"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Contact
+            </Link>
+          </div>
 
-//             <p className="px-3 pt-3 text-xs font-semibold uppercase tracking-wide text-[#666666]">
-//               AI Features
-//             </p>
-//             {featureLinks.map((f) => {
-//               const Icon = f.icon;
-//               return (
-//                 <Link
-//                   key={f.href}
-//                   href={f.href}
-//                   className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-[#aaaaaa] hover:bg-[#333333]"
-//                 >
-//                   <Icon className="h-4 w-4 text-[#ffea00]" />
-//                   {f.label}
-//                 </Link>
-//               );
-//             })}
-
-//             <div className="pt-3 border-t border-[#444444] flex flex-col gap-2 mt-2">
-//               {/* {showAuthed ? (
-//                 <>
-//                   <div className="flex items-center gap-3 rounded-lg bg-[#333333] px-3 py-2.5">
-//                     {user?.avatar ? (
-//                       <img
-//                         src={user.avatar}
-//                         alt={user?.fullname || "User"}
-//                         referrerPolicy="no-referrer"
-//                         className="h-9 w-9 rounded-full object-cover"
-//                       />
-//                     ) : (
-//                       <span className="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-[#ffea00] to-[#ffd700] text-sm font-bold text-[#1a1a1a]">
-//                         {initial}
-//                       </span>
-//                     )}
-//                     <span className="text-sm font-medium text-white truncate">
-//                       {user?.fullname || "Account"}
-//                     </span>
-//                   </div>
-//                   <Link
-//                     href="/dashboard"
-//                     className="flex items-center justify-center gap-1 rounded-lg border border-[#444444] py-2.5 text-sm font-medium text-[#aaaaaa]"
-//                   >
-//                     <LayoutDashboard className="h-4 w-4" /> Dashboard
-//                   </Link>
-//                   <button
-//                     onClick={() => {
-//                       logout();
-//                       router.push("/");
-//                     }}
-//                     className="flex items-center justify-center gap-1 rounded-lg bg-[#333333] py-2.5 text-sm font-medium text-red-400"
-//                   >
-//                     <LogOut className="h-4 w-4" /> Logout
-//                   </button>
-//                 </>
-//               ) : ( */}
-//                 <>
-//                   <Link
-//                     href="/login"
-//                     className="rounded-lg border border-[#444444] py-2.5 text-center text-sm font-medium text-[#aaaaaa]"
-//                   >
-//                     Login
-//                   </Link>
-//                   <Link
-//                     href="/register"
-//                     className="rounded-lg bg-gradient-to-r from-[#ffea00] to-[#ffd700] py-2.5 text-center text-sm font-semibold text-[#1a1a1a]"
-//                   >
-//                     Get Started
-//                   </Link>
-//                 </>
-//               {/* )} */}
-//             </div>
-//           </div>
-//         </div>
-//       )}
-//     </header>
-//   );
-// }
+          <div className="pt-4 border-t border-white/[0.08] flex flex-col gap-3">
+            {!isLoggedIn ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsLoggedIn(true);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full text-center py-2.5 rounded-xl text-sm text-gray-300 bg-white/[0.04] border border-white/[0.08] hover:text-white font-medium cursor-pointer"
+                >
+                  Login
+                </button>
+                <Link
+                  href="#cta"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="w-full flex items-center justify-center gap-2 py-3 bg-[#FFE600] hover:bg-[#FFD000] text-black font-bold rounded-xl shadow-lg"
+                >
+                  <span>Get Started Free</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsLoggedIn(false);
+                  setIsMobileMenuOpen(false);
+                }}
+                className="w-full py-2.5 rounded-xl text-sm font-medium text-rose-400 bg-rose-500/10 border border-rose-500/20"
+              >
+                Sign Out
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+    </header>
+  );
+}
