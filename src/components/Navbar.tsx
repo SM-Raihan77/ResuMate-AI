@@ -1,230 +1,308 @@
-"use client"
+'use client';
 
-import * as React from "react"
-import Link from "next/link"
+import React, { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import { 
+  Sparkles, 
   Menu, 
   X, 
-  Sparkles, 
+  ArrowRight, 
+  ChevronDown, 
+  LayoutDashboard, 
   FileText, 
-  CheckCircle, 
-  Wand2 
-} from "lucide-react"
+  Sliders, 
+  LogOut, 
+  Zap, 
+  CheckCircle2,
+  Bot
+} from 'lucide-react';
 
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-  navigationMenuTriggerStyle,
-} from "@/components/ui/navigation-menu"
-import { Button } from "@/components/ui/button" // Imported Shadcn Button
+export default function Navbar(): React.JSX.Element {
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+  const userDropdownRef = useRef<HTMLDivElement>(null);
 
-const resumeFeatures: { title: string; href: string; description: string; icon: React.ReactNode }[] = [
-  {
-    title: "AI Resume Builder",
-    href: "/resume/builder",
-    description: "Build a professional, tailored resume in minutes with our AI engine.",
-    icon: <Sparkles className="h-5 w-5 text-primary" />,
-  },
-  {
-    title: "ATS Score Checker",
-    href: "/resume/ats-check",
-    description: "Scan your resume against job descriptions to optimize your ATS match rate.",
-    icon: <CheckCircle className="h-5 w-5 text-ai-emerald" />, 
-  },
-  {
-    title: "Resume Templates",
-    href: "/resume/templates",
-    description: "Browse our collection of recruiter-approved, ATS-friendly templates.",
-    icon: <FileText className="h-5 w-5 text-ai-cyan" />, 
-  },
-]
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
-const toolsFeatures: { title: string; href: string; description: string }[] = [
-  {
-    title: "Cover Letter Generator",
-    href: "/tools/cover-letter",
-    description: "Generate highly personalized cover letters instantly.",
-  },
-  {
-    title: "LinkedIn Optimizer",
-    href: "/tools/linkedin",
-    description: "Get AI-driven suggestions to improve your LinkedIn profile visibility.",
-  },
-  {
-    title: "Interview Prep AI",
-    href: "/tools/interview",
-    description: "Practice with our AI mock interviewer and get real-time feedback.",
-  },
-]
-
-export function Navbar() {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false)
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userDropdownRef.current && !userDropdownRef.current.contains(event.target as Node)) {
+        setIsUserDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-bg-coolgray bg-bg-offwhite">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
-        
-        <div className="flex items-center gap-14">
-          {/* Logo Section */}
-          <Link href="/" className="flex items-center gap-2">
-            <Wand2 className="h-6 w-6 text-primary" />
-            <span className="text-xl font-medium text-slate-dark">
-              Resumate<span className="text-primary">-AI</span>
+    <header
+      className={`sticky top-0 z-50 w-full transition-all duration-300 ${
+        isScrolled
+          ? 'bg-[#08090c]/90 backdrop-blur-xl border-b border-white/[0.08] shadow-[0_10px_30px_rgba(0,0,0,0.8)] py-3'
+          : 'bg-[#08090c] border-b border-white/[0.05] py-4'
+      }`}
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between">
+          
+          {/* Brand Logo */}
+          <Link href="/" className="flex items-center gap-2.5 group shrink-0">
+            <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-[#FFE600] text-black shadow-[0_0_20px_rgba(255,230,0,0.35)] transition-transform group-hover:scale-105">
+              <Bot className="w-5 h-5 stroke-[2.5]" />
+            </div>
+            <span className="font-extrabold text-xl tracking-tight text-white">
+              ResuMate<span className="text-[#FFE600]">.AI</span>
             </span>
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex flex-1 items-center justify-center">
-            <NavigationMenu>
-              <NavigationMenuList>
-                
-                {/* Resume Dropdown */}
-                <NavigationMenuItem>
-                  {/* Added font-normal to make text thinner */}
-                  <NavigationMenuTrigger className="font-normal text-slate-dark hover:text-primary bg-transparent">
-                    Resume
-                  </NavigationMenuTrigger>
-                  {/* Moved border color here to override Shadcn's default black border */}
-                  <NavigationMenuContent className="border-bg-coolgray">
-                    <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-1 lg:w-[600px] bg-white">
-                      {resumeFeatures.map((feature) => (
-                        <ListItem
-                          key={feature.title}
-                          title={feature.title}
-                          href={feature.href}
-                          icon={feature.icon}
-                        >
-                          {feature.description}
-                        </ListItem>
-                      ))}
-                    </ul>
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
+          {/* Desktop Navigation Links */}
+          <nav className="hidden lg:flex items-center gap-8">
+            <Link
+              href="/"
+              className="text-sm font-medium text-white hover:text-[#FFE600] transition-colors"
+            >
+              Home
+            </Link>
+            <Link
+              href="#tools"
+              className="text-sm font-medium text-gray-300 hover:text-[#FFE600] transition-colors"
+            >
+              Tools
+            </Link>
+            <Link
+              href="#how-it-works"
+              className="text-sm font-medium text-gray-300 hover:text-[#FFE600] transition-colors"
+            >
+              How It Works
+            </Link>
+            <Link
+              href="#features"
+              className="text-sm font-medium text-gray-300 hover:text-[#FFE600] transition-colors"
+            >
+              Features
+            </Link>
+            <Link
+              href="#testimonials"
+              className="text-sm font-medium text-gray-300 hover:text-[#FFE600] transition-colors"
+            >
+              Testimonials
+            </Link>
+            <Link
+              href="#cta"
+              className="text-sm font-medium text-gray-300 hover:text-[#FFE600] transition-colors"
+            >
+              Contact
+            </Link>
+          </nav>
 
-                {/* Tools Dropdown */}
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger className="font-normal text-slate-dark hover:text-primary bg-transparent">
-                    Tools
-                  </NavigationMenuTrigger>
-                  <NavigationMenuContent className="border-bg-coolgray">
-                    <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[500px] bg-white">
-                      {toolsFeatures.map((feature) => (
-                        <ListItem
-                          key={feature.title}
-                          title={feature.title}
-                          href={feature.href}
-                        >
-                          {feature.description}
-                        </ListItem>
-                      ))}
-                    </ul>
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
+          {/* Desktop Actions (Auth state toggle) */}
+          <div className="hidden sm:flex items-center gap-4">
+            {!isLoggedIn ? (
+              <div className="flex items-center gap-4">
+                <button
+                  type="button"
+                  onClick={() => setIsLoggedIn(true)}
+                  className="text-sm font-medium text-gray-300 hover:text-white transition-colors cursor-pointer px-2 py-1"
+                >
+                  Login
+                </button>
+                <Link
+                  href="#cta"
+                  className="relative group overflow-hidden inline-flex items-center gap-2 px-5 py-2.5 bg-[#FFE600] hover:bg-[#FFD000] text-black font-bold rounded-xl shadow-[0_0_20px_rgba(255,230,0,0.3)] hover:shadow-[0_0_30px_rgba(255,230,0,0.5)] transition-all active:scale-[0.98] text-sm"
+                >
+                  <span>Get Started</span>
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+                </Link>
+              </div>
+            ) : (
+              /* Authenticated User Menu */
+              <div className="relative" ref={userDropdownRef}>
+                <button
+                  type="button"
+                  onClick={() => setIsUserDropdownOpen((prev) => !prev)}
+                  className="flex items-center gap-2 p-1.5 rounded-xl bg-[#141519] border border-white/[0.1] hover:border-[#FFE600]/60 transition-all cursor-pointer focus:outline-none"
+                  aria-label="User menu"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-[#FFE600] flex items-center justify-center text-black font-black text-xs">
+                    JD
+                  </div>
+                  <span className="text-xs font-semibold text-gray-200 pl-1 pr-0.5">John D.</span>
+                  <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+                </button>
 
-                {/* Direct Links */}
-                <NavigationMenuItem>
-                  <NavigationMenuLink 
-                    className={`${navigationMenuTriggerStyle()} font-normal text-slate-dark hover:text-primary bg-transparent cursor-pointer`} 
-                    render={<Link href="/enterprise">Enterprise</Link>} 
-                  />
-                </NavigationMenuItem>
-                <NavigationMenuItem>
-                  <NavigationMenuLink 
-                    className={`${navigationMenuTriggerStyle()} font-normal text-slate-dark hover:text-primary bg-transparent cursor-pointer`} 
-                    render={<Link href="/pricing">Pricing</Link>} 
-                  />
-                </NavigationMenuItem>
+                {/* Dropdown Menu */}
+                {isUserDropdownOpen && (
+                  <div className="absolute right-0 mt-2.5 w-56 rounded-2xl bg-[#121316] border border-white/[0.1] shadow-[0_20px_50px_rgba(0,0,0,0.9)] py-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+                    <div className="px-4 py-2 border-b border-white/[0.08] mb-1">
+                      <p className="text-xs font-semibold text-white">John Doe</p>
+                      <p className="text-[11px] text-gray-400 truncate">john.doe@example.com</p>
+                    </div>
 
-              </NavigationMenuList>
-            </NavigationMenu>
+                    <Link
+                      href="/dashboard"
+                      className="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-gray-300 hover:bg-white/[0.06] hover:text-[#FFE600] transition-colors"
+                      onClick={() => setIsUserDropdownOpen(false)}
+                    >
+                      <LayoutDashboard className="w-4 h-4 text-[#FFE600]" />
+                      Candidate Dashboard
+                    </Link>
+
+                    <Link
+                      href="/resumes"
+                      className="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-gray-300 hover:bg-white/[0.06] hover:text-[#FFE600] transition-colors"
+                      onClick={() => setIsUserDropdownOpen(false)}
+                    >
+                      <FileText className="w-4 h-4 text-[#FFE600]" />
+                      Saved Resumes (4)
+                    </Link>
+
+                    <Link
+                      href="/settings"
+                      className="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-gray-300 hover:bg-white/[0.06] hover:text-[#FFE600] transition-colors"
+                      onClick={() => setIsUserDropdownOpen(false)}
+                    >
+                      <Sliders className="w-4 h-4 text-[#FFE600]" />
+                      AI Preferences
+                    </Link>
+
+                    <div className="my-1 border-t border-white/[0.08]" />
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsLoggedIn(false);
+                        setIsUserDropdownOpen(false);
+                      }}
+                      className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-rose-400 hover:bg-rose-500/10 transition-colors text-left cursor-pointer"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Sign Out
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Mobile menu toggle */}
+            <button
+              type="button"
+              onClick={() => setIsMobileMenuOpen((prev) => !prev)}
+              className="lg:hidden p-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-gray-300 hover:text-white"
+              aria-label="Toggle navigation menu"
+            >
+              {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
           </div>
-        </div>
 
-        {/* Desktop Call to Actions (Using Shadcn Button) */}
-        <div className="hidden md:flex items-center gap-4">
-          <Button variant="ghost" className="font-normal text-slate-dark hover:text-primary">
-            <Link href="/auth/login">Log in</Link>
-          </Button>
-          <Button className="font-normal bg-primary text-white hover:bg-primary-accent">
-            <Link href="/auth/register">Get Started</Link>
-          </Button>
-        </div>
+          {/* Small screen mobile toggle if not authenticated */}
+          <div className="flex sm:hidden items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsMobileMenuOpen((prev) => !prev)}
+              className="p-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-gray-300 hover:text-white"
+              aria-label="Toggle navigation menu"
+            >
+              {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
 
-        {/* Mobile Menu Toggle */}
-        <button
-          className="md:hidden p-2 text-slate-dark hover:text-primary transition-colors"
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        >
-          {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
+        </div>
       </div>
 
-      {/* Mobile Navigation Menu (Animated & Thinner text) */}
+      {/* Mobile Drawer */}
       {isMobileMenuOpen && (
-        <div className="md:hidden border-t border-bg-coolgray bg-bg-offwhite px-4 py-6 shadow-lg animate-in slide-in-from-top-4 fade-in-0 duration-300">
-          <nav className="flex flex-col gap-4">
-            {/* Added text-sm and font-normal for thinner/smaller text */}
-            <Link href="/resume/builder" className="text-sm font-normal text-slate-dark hover:text-primary transition-colors">
-              AI Resume Builder
+        <div className="lg:hidden border-t border-white/[0.08] bg-[#08090c]/98 backdrop-blur-2xl px-4 py-5 space-y-4 animate-in slide-in-from-top duration-200">
+          <div className="space-y-1">
+            <Link 
+              href="/" 
+              className="block px-3 py-2.5 rounded-xl text-sm font-medium text-white hover:bg-white/[0.06] hover:text-[#FFE600]"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Home
             </Link>
-            <Link href="/resume/ats-check" className="text-sm font-normal text-slate-dark hover:text-ai-cyan transition-colors">
-              ATS Score Checker
+            <Link 
+              href="#tools" 
+              className="block px-3 py-2.5 rounded-xl text-sm font-medium text-gray-300 hover:bg-white/[0.06] hover:text-[#FFE600]"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Tools
             </Link>
-            <Link href="/tools" className="text-sm font-normal text-slate-dark hover:text-primary transition-colors">
-              All AI Tools
+            <Link 
+              href="#how-it-works" 
+              className="block px-3 py-2.5 rounded-xl text-sm font-medium text-gray-300 hover:bg-white/[0.06] hover:text-[#FFE600]"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              How It Works
             </Link>
-            <Link href="/enterprise" className="text-sm font-normal text-slate-dark hover:text-primary transition-colors">
-              Enterprise
+            <Link 
+              href="#features" 
+              className="block px-3 py-2.5 rounded-xl text-sm font-medium text-gray-300 hover:bg-white/[0.06] hover:text-[#FFE600]"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Features
             </Link>
-            <Link href="/pricing" className="text-sm font-normal text-slate-dark hover:text-primary transition-colors">
-              Pricing
+            <Link 
+              href="#testimonials" 
+              className="block px-3 py-2.5 rounded-xl text-sm font-medium text-gray-300 hover:bg-white/[0.06] hover:text-[#FFE600]"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Testimonials
             </Link>
-            
-            <div className="mt-4 flex flex-col gap-3 pt-4 border-t border-bg-coolgray">
-              <Button variant="outline" className="w-full font-normal border-slate-dark text-slate-dark">
-                <Link href="/auth/login">Log in</Link>
-              </Button>
-              <Button className="w-full font-normal bg-primary text-white hover:bg-primary-accent">
-                <Link href="/auth/register">Get Started</Link>
-              </Button>
-            </div>
-          </nav>
+            <Link 
+              href="#cta" 
+              className="block px-3 py-2.5 rounded-xl text-sm font-medium text-gray-300 hover:bg-white/[0.06] hover:text-[#FFE600]"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Contact
+            </Link>
+          </div>
+
+          <div className="pt-4 border-t border-white/[0.08] flex flex-col gap-3">
+            {!isLoggedIn ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsLoggedIn(true);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full text-center py-2.5 rounded-xl text-sm text-gray-300 bg-white/[0.04] border border-white/[0.08] hover:text-white font-medium cursor-pointer"
+                >
+                  Login
+                </button>
+                <Link
+                  href="#cta"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="w-full flex items-center justify-center gap-2 py-3 bg-[#FFE600] hover:bg-[#FFD000] text-black font-bold rounded-xl shadow-lg"
+                >
+                  <span>Get Started Free</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsLoggedIn(false);
+                  setIsMobileMenuOpen(false);
+                }}
+                className="w-full py-2.5 rounded-xl text-sm font-medium text-rose-400 bg-rose-500/10 border border-rose-500/20"
+              >
+                Sign Out
+              </button>
+            )}
+          </div>
         </div>
       )}
     </header>
-  )
-}
-
-function ListItem({
-  title,
-  children,
-  href,
-  icon,
-  ...props
-}: React.ComponentPropsWithoutRef<"li"> & { href: string; icon?: React.ReactNode }) {
-  return (
-    <li {...props}>
-      <NavigationMenuLink 
-        render={
-          <Link 
-            href={href} 
-            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-bg-coolgray focus:bg-bg-coolgray"
-          >
-            <div className="flex items-center gap-3">
-              {icon && <div className="flex-shrink-0">{icon}</div>}
-              <div className="flex flex-col gap-1">
-                {/* Changed font-medium to font-normal */}
-                <div className="text-sm font-normal text-slate-dark">{title}</div>
-                <div className="line-clamp-2 text-xs font-normal text-[#475569]">{children}</div>
-              </div>
-            </div>
-          </Link>
-        } 
-      />
-    </li>
-  )
+  );
 }
