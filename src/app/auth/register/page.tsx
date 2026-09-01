@@ -3,13 +3,14 @@
 import { useState } from "react"
 import Link from "next/link"
 import { EyeIcon, EyeOffIcon, Sparkles, Mail } from "lucide-react"
-import { FaSquareGithub } from "react-icons/fa6"
+
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
+import { BsGithub } from "react-icons/bs"
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false)
@@ -141,7 +142,7 @@ export default function RegisterPage() {
           {/* Social Auth */}
           <div className="grid grid-cols-2 gap-4">
             <Button variant="outline" className="h-11 bg-background border-white/10 hover:bg-white/5 hover:text-white">
-              <FaSquareGithub className="w-4 h-4 mr-2" />
+              <BsGithub className="w-4 h-4 mr-2" />
               GitHub
             </Button>
             <Button variant="outline" className="h-11 bg-background border-white/10 hover:bg-white/5 hover:text-white">
