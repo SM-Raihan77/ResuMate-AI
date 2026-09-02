@@ -1,23 +1,17 @@
-"use client"
 
-import { useState } from "react"
-import Link from "next/link"
-import { EyeIcon, EyeOffIcon, Sparkles, Mail } from "lucide-react"
+import Link from "next/link";
+import { Sparkles, Mail } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Field, FieldLabel } from "@/components/ui/field"
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
-import { BsGithub } from "react-icons/bs"
+import { BsGithub } from "react-icons/bs";
+import RegisterForm from "./RegisterForm";
 
 export default function RegisterPage() {
-  const [showPassword, setShowPassword] = useState(false)
+
 
   return (
     <div className="min-h-screen w-full grid lg:grid-cols-2 bg-background text-foreground">
-      
       {/* LEFT COLUMN: Branding & Value Proposition */}
       <div className="relative hidden lg:flex flex-col justify-between p-12 overflow-hidden border-r border-white/5 bg-card-dark/50">
         {/* Subtle Cyber Yellow Glow Effect */}
@@ -28,7 +22,9 @@ export default function RegisterPage() {
         {/* Logo */}
         <div className="flex items-center gap-2 font-bold text-2xl tracking-tight z-10">
           <Sparkles className="w-6 h-6 text-cyber-yellow" />
-          <span>Resumate<span className="text-cyber-yellow">.ai</span></span>
+          <span>
+            Resumate<span className="text-cyber-yellow">.ai</span>
+          </span>
         </div>
 
         {/* Hero Copy */}
@@ -38,13 +34,17 @@ export default function RegisterPage() {
             <span className="text-cyber-yellow">one line at a time.</span>
           </h1>
           <p className="text-lg text-gray-400 mb-8">
-            Join thousands of professionals using AI-driven insights to craft the perfect resume and land their dream roles.
+            Join thousands of professionals using AI-driven insights to craft
+            the perfect resume and land their dream roles.
           </p>
-          
+
           <div className="flex items-center gap-4 text-sm font-medium text-gray-300">
             <div className="flex -space-x-3">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="w-10 h-10 rounded-full border-2 border-card-dark bg-gray-800" />
+                <div
+                  key={i}
+                  className="w-10 h-10 rounded-full border-2 border-card-dark bg-gray-800"
+                />
               ))}
             </div>
             <p>Trusted by 10,000+ job seekers</p>
@@ -62,70 +62,22 @@ export default function RegisterPage() {
         {/* Mobile Logo */}
         <div className="flex lg:hidden items-center gap-2 font-bold text-2xl tracking-tight mb-12">
           <Sparkles className="w-6 h-6 text-cyber-yellow" />
-          <span>Resumate<span className="text-cyber-yellow">.ai</span></span>
+          <span>
+            Resumate<span className="text-cyber-yellow">.ai</span>
+          </span>
         </div>
 
         <div className="w-full max-w-md space-y-8 bg-card-dark p-8 rounded-2xl border border-[var(--card-border)] shadow-2xl">
           <div className="space-y-2 text-center">
-            <h2 className="text-3xl font-bold tracking-tight">Create an account</h2>
+            <h2 className="text-3xl font-bold tracking-tight">
+              Create an account
+            </h2>
             <p className="text-gray-400 text-sm">
               Enter your details below to get started
             </p>
           </div>
 
-          <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
-            
-            {/* Standard Shadcn Input for Full Name */}
-            <div className="space-y-2">
-              <Label htmlFor="name" className="text-gray-300">Full Name</Label>
-              <Input 
-                id="name" 
-                placeholder="John Doe" 
-                className="bg-background border-white/10 focus-visible:ring-cyber-yellow/50 h-11"
-              />
-            </div>
-
-            {/* Standard Shadcn Input for Email */}
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-gray-300">Email address</Label>
-              <Input 
-                id="email" 
-                type="email" 
-                placeholder="john@example.com" 
-                className="bg-background border-white/10 focus-visible:ring-cyber-yellow/50 h-11"
-              />
-            </div>
-
-            {/* Custom Provided InputGroup for Password */}
-            <Field className="space-y-2">
-              <FieldLabel htmlFor="password" className="text-gray-300">Password</FieldLabel>
-              <InputGroup className="h-11 border-white/10 bg-background focus-within:ring-1 focus-within:ring-cyber-yellow/50">
-                <InputGroupInput
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Create a strong password"
-                  className="bg-transparent border-none focus-visible:ring-0"
-                />
-                <InputGroupAddon align="inline-end">
-                  <button 
-                    type="button" 
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="text-gray-400 hover:text-cyber-yellow transition-colors focus:outline-none"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                  >
-                    {showPassword ? <EyeIcon className="w-4 h-4" /> : <EyeOffIcon className="w-4 h-4" />}
-                  </button>
-                </InputGroupAddon>
-              </InputGroup>
-            </Field>
-
-            <Button 
-              type="submit" 
-              className="w-full h-11 bg-cyber-yellow hover:bg-cyber-yellow-hover text-black font-semibold text-base transition-all shadow-[0_0_15px_var(--yellow-glow)] hover:shadow-[0_0_25px_var(--yellow-glow)]"
-            >
-              Sign Up
-            </Button>
-          </form>
+          <RegisterForm />
 
           {/* Divider */}
           <div className="relative">
@@ -141,11 +93,17 @@ export default function RegisterPage() {
 
           {/* Social Auth */}
           <div className="grid grid-cols-2 gap-4">
-            <Button variant="outline" className="h-11 bg-background border-white/10 hover:bg-white/5 hover:text-white">
+            <Button
+              variant="outline"
+              className="h-11 bg-background border-white/10 hover:bg-white/5 hover:text-white"
+            >
               <BsGithub className="w-4 h-4 mr-2" />
               GitHub
             </Button>
-            <Button variant="outline" className="h-11 bg-background border-white/10 hover:bg-white/5 hover:text-white">
+            <Button
+              variant="outline"
+              className="h-11 bg-background border-white/10 hover:bg-white/5 hover:text-white"
+            >
               <Mail className="w-4 h-4 mr-2" />
               Google
             </Button>
@@ -154,11 +112,14 @@ export default function RegisterPage() {
 
         <p className="mt-8 text-center text-sm text-gray-400">
           Already have an account?{" "}
-          <Link href="/auth/login" className="font-semibold text-cyber-yellow hover:underline underline-offset-4">
+          <Link
+            href="/auth/login"
+            className="font-semibold text-cyber-yellow hover:underline underline-offset-4"
+          >
             Sign in
           </Link>
         </p>
       </div>
     </div>
-  )
+  );
 }
