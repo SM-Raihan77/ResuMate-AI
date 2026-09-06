@@ -1,11 +1,23 @@
+"use client";
 
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
 import { FaGithub, FaGoogle } from "react-icons/fa6";
 import { Button } from "@/components/ui/button";
 import LoginForm from "./LoginForm";
+import { signIn } from "@/lib/auth-client";
 
 export default function LoginPage() {
+  const signInWithGoogle = async () => {
+    await signIn.social({
+      provider: "google",
+    });
+  };
+  const signUpWithGithub = async () => {
+    await signIn.social({
+      provider: "github",
+    });
+  };
 
   return (
     <div className="min-h-screen w-full grid lg:grid-cols-2 bg-background text-foreground">
@@ -85,6 +97,7 @@ export default function LoginPage() {
           {/* Social Auth */}
           <div className="grid grid-cols-2 gap-4">
             <Button
+              onClick={signUpWithGithub}
               variant="outline"
               className="h-11 bg-background border-white/10 hover:bg-white/5 hover:text-white"
             >
@@ -92,6 +105,7 @@ export default function LoginPage() {
               GitHub
             </Button>
             <Button
+              onClick={signInWithGoogle}
               variant="outline"
               className="h-11 bg-background border-white/10 hover:bg-white/5 hover:text-white"
             >

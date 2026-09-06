@@ -60,8 +60,7 @@ const RegisterForm = () => {
       if (error) {
         toast.add({
           type: "error",
-          description: "User couldn't be created!",
-          priority: "high",
+          description: `${error?.message}. User couldn't be created!`,
         });
 
         return;

@@ -60,8 +60,7 @@ const LoginForm = () => {
       if (error) {
         toast.add({
           type: "error",
-          description: "Login failed!",
-          priority: "high",
+          description: `${error?.message}. Login failed!`,
         });
         return;
       }

@@ -1,14 +1,25 @@
+"use client";
 
 import Link from "next/link";
-import { Sparkles, Mail } from "lucide-react";
+import { Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
-import { BsGithub } from "react-icons/bs";
+import { BsGithub, BsGoogle } from "react-icons/bs";
 import RegisterForm from "./RegisterForm";
+import { signIn } from "@/lib/auth-client";
 
 export default function RegisterPage() {
-
+  const signUpWithGoogle = async () => {
+    await signIn.social({
+      provider: "google",
+    });
+  };
+  const signUpWithGithub = async () => {
+    await signIn.social({
+      provider: "github",
+    });
+  };
 
   return (
     <div className="min-h-screen w-full grid lg:grid-cols-2 bg-background text-foreground">
@@ -94,6 +105,7 @@ export default function RegisterPage() {
           {/* Social Auth */}
           <div className="grid grid-cols-2 gap-4">
             <Button
+              onClick={signUpWithGithub}
               variant="outline"
               className="h-11 bg-background border-white/10 hover:bg-white/5 hover:text-white"
             >
@@ -101,10 +113,11 @@ export default function RegisterPage() {
               GitHub
             </Button>
             <Button
+              onClick={signUpWithGoogle}
               variant="outline"
               className="h-11 bg-background border-white/10 hover:bg-white/5 hover:text-white"
             >
-              <Mail className="w-4 h-4 mr-2" />
+              <BsGoogle className="w-4 h-4 mr-2" />
               Google
             </Button>
           </div>
