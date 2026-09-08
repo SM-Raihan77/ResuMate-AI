@@ -85,7 +85,7 @@ model Resume {
   description String?
 
   photoUrl    String?
-  colorHex    String  @default("#000000")
+  colorHex    String  @default("#FFE600")
   borderStyle String  @default("squircle")
   summary     String?
   firstName   String?
