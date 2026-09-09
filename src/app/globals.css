@@ -16,6 +16,7 @@
   --color-cyber-yellow: #ffe600;
   --color-cyber-yellow-hover: #ffd700;
   --color-card-dark: #121316;
+  --color-card-border: var(--card-border);
   --color-card-dark-hover: #17181c;
   --font-sans: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
   --font-mono: var(--font-geist-mono), monospace;
