@@ -13,46 +13,46 @@ import {
   InputGroupAddon,
   InputGroupInput,
 } from "@/components/ui/input-group";
-import { EyeIcon, EyeOffIcon } from "lucide-react";
+import { EyeIcon, EyeOffIcon, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import z from "zod";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { signUp } from "@/lib/auth-client";
-import { useRouter } from "next/navigation";
+import { signIn } from "@/lib/auth-client";
 import { toast } from "@/components/ui/toast";
-import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
-const formSchema = z.object({
-  fullName: z
+export const loginSchema = z.object({
+  email: z
     .string()
-    .min(2, "Full name must be at least 2 characters")
-    .max(50, "Full name must be less than 50 characters"),
-  email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+    .min(1, { message: "Email is required" })
+    .email({ message: "Invalid email address" }),
+  password: z
+    .string()
+    .min(1, { message: "Password is required" })
+    .min(8, { message: "Password must be at least 8 characters" }),
 });
-export type FormValues = z.infer<typeof formSchema>;
 
-const RegisterForm = () => {
+export type LoginFormData = z.infer<typeof loginSchema>;
+
+const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [isPending, setIsPending] = useState(false);
   const router = useRouter();
+  const [isPending, setIsPending] = useState(false);
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
     defaultValues: {
-      fullName: "",
       email: "",
       password: "",
     },
   });
 
-  async function onSubmit(values: FormValues) {
+  async function onSubmit(values: LoginFormData) {
     setIsPending(true);
 
     try {
-      const { error } = await signUp.email({
-        name: values.fullName,
+      const { error } = await signIn.email({
         email: values.email,
         password: values.password,
       });
@@ -60,9 +60,8 @@ const RegisterForm = () => {
       if (error) {
         toast.add({
           type: "error",
-          description: `${error?.message}. User couldn't be created!`,
+          description: `${error?.message}. Login failed!`,
         });
-
         return;
       }
 
@@ -75,31 +74,6 @@ const RegisterForm = () => {
   return (
     <form className="space-y-5" onSubmit={form.handleSubmit(onSubmit)}>
       <FieldGroup>
-        {/* Full Name */}
-        <Controller
-          name="fullName"
-          control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid} className="space-y-2">
-              <FieldLabel htmlFor="fullName" className="text-gray-300">
-                Full Name
-              </FieldLabel>
-
-              <Input
-                {...field}
-                id="fullName"
-                placeholder="John Doe"
-                autoComplete="name"
-                disabled={isPending}
-                aria-invalid={fieldState.invalid}
-                className="bg-background border-white/10 focus-visible:ring-cyber-yellow/50 h-11"
-              />
-
-              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-            </Field>
-          )}
-        />
-
         {/* Email */}
         <Controller
           name="email"
@@ -121,7 +95,9 @@ const RegisterForm = () => {
                 className="bg-background border-white/10 focus-visible:ring-cyber-yellow/50 h-11"
               />
 
-              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              {fieldState.invalid && (
+                <FieldError errors={[fieldState.error]} />
+              )}
             </Field>
           )}
         />
@@ -141,8 +117,8 @@ const RegisterForm = () => {
                   {...field}
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Create a strong password"
-                  autoComplete="new-password"
+                  placeholder="Enter your password"
+                  autoComplete="current-password"
                   disabled={isPending}
                   aria-invalid={fieldState.invalid}
                   className="bg-transparent border-none focus-visible:ring-0"
@@ -152,21 +128,23 @@ const RegisterForm = () => {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="text-gray-400 hover:text-cyber-yellow transition-colors focus:outline-none"
+                    className="text-gray-400 hover:text-cyber-yellow transition-colors focus:outline-none p-1"
                     aria-label={
                       showPassword ? "Hide password" : "Show password"
                     }
                   >
                     {showPassword ? (
-                      <EyeIcon className="w-4 h-4" />
-                    ) : (
                       <EyeOffIcon className="w-4 h-4" />
+                    ) : (
+                      <EyeIcon className="w-4 h-4" />
                     )}
                   </button>
                 </InputGroupAddon>
               </InputGroup>
 
-              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              {fieldState.invalid && (
+                <FieldError errors={[fieldState.error]} />
+              )}
             </Field>
           )}
         />
@@ -174,19 +152,20 @@ const RegisterForm = () => {
 
       <Button
         type="submit"
-        className="w-full h-11 bg-cyber-yellow hover:bg-cyber-yellow-hover text-black font-semibold text-base transition-all shadow-[0_0_15px_var(--yellow-glow)] hover:shadow-[0_0_25px_var(--yellow-glow)]"
+        disabled={isPending}
+        className="w-full h-11 bg-cyber-yellow hover:bg-cyber-yellow-hover text-black font-semibold text-base transition-all shadow-[0_0_15px_var(--yellow-glow)] hover:shadow-[0_0_25px_var(--yellow-glow)] inline-flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {isPending ? (
           <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Creating account...
+            <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+            <span>Logging in...</span>
           </>
         ) : (
-          "Sign Up"
+          "Log In"
         )}
       </Button>
     </form>
   );
 };
 
-export default RegisterForm;
+export default LoginForm;

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, CheckCircle2, Mail, Sparkles } from 'lucide-react';
+import { ArrowRight, CheckCircle2 } from 'lucide-react';
 
 export default function CTASection(): React.JSX.Element {
   const [email, setEmail] = useState('');
@@ -16,12 +16,10 @@ export default function CTASection(): React.JSX.Element {
 
   return (
     <section id="cta" className="py-20 lg:py-28 bg-[#08090C] text-white relative overflow-hidden border-t border-white/[0.04]">
-      
       {/* Background ambient lighting */}
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[650px] bg-[#FFE600]/8 rounded-full blur-[200px] pointer-events-none" />
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-20">
-        
         {/* Block 1: Main CTA */}
         <div className="space-y-6">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[#FFE600]">
@@ -33,7 +31,7 @@ export default function CTASection(): React.JSX.Element {
 
           <div className="pt-2">
             <Link
-              href="#newsletter"
+              href="/register"
               className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#FFE600] hover:bg-[#FFD000] text-black font-extrabold rounded-xl shadow-[0_0_30px_rgba(255,230,0,0.35)] hover:shadow-[0_0_40px_rgba(255,230,0,0.55)] transition-all hover:scale-[1.02] active:scale-[0.98] text-base"
             >
               <span>Create Free Account</span>
@@ -77,7 +75,6 @@ export default function CTASection(): React.JSX.Element {
             </div>
           )}
         </div>
-
       </div>
     </section>
   );

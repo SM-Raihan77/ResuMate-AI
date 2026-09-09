@@ -1,11 +1,12 @@
-import Banner from '@/components/Banner';
-import CTASection from '@/components/CTASection';
-import Features from '@/components/Features';
-import Footer from '@/components/Footer';
-import HowItWorks from '@/components/HowItWorks';
-import IntelligentTools from '@/components/IntelligentTools';
-import Navbar from '@/components/Navbar';
-import Testimonials from '@/components/Testimonials';
+import { Navbar, Footer } from "@/components/shared";
+import {
+  Banner,
+  Features,
+  HowItWorks,
+  IntelligentTools,
+  Testimonials,
+  CTASection,
+} from "@/components/features/landing";
 
 export default function Home() {
   return (
