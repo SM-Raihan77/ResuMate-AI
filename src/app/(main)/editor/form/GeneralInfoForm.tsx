@@ -102,7 +102,7 @@ export default function GeneralInfoForm() {
           <Button type="button" variant="outline" onClick={() => form.reset()}>
             Reset
           </Button>
-          <Button type="button" form="general-info">
+          <Button type="button" variant={"secondary"} form="general-info">
             Next
           </Button>
         </Field>
