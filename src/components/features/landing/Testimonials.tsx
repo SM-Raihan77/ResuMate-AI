@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Star, CheckCircle2 } from 'lucide-react';
+import { Star } from 'lucide-react';
 
 interface TestimonialItem {
   name: string;
@@ -30,12 +30,10 @@ const testimonials: TestimonialItem[] = [
 export default function Testimonials(): React.JSX.Element {
   return (
     <section id="testimonials" className="py-20 lg:py-28 bg-[#08090C] text-white relative overflow-hidden border-t border-white/[0.04]">
-      
       {/* Ambient background glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#FFE600]/4 rounded-full blur-[190px] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[#FFE600]">
@@ -79,7 +77,6 @@ export default function Testimonials(): React.JSX.Element {
             </div>
           ))}
         </div>
-
       </div>
     </section>
   );

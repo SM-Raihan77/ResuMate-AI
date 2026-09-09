@@ -2,19 +2,15 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { 
   Sparkles, 
   ArrowRight, 
   CheckCircle2, 
   TrendingUp, 
-  FileCheck, 
   ShieldCheck, 
   Award,
   RefreshCw,
   ChevronRight,
-  Zap,
-  Target
 } from 'lucide-react';
 
 interface MetricItem {
@@ -35,29 +31,15 @@ export default function Banner(): React.JSX.Element {
 
   return (
     <section className="relative w-full min-h-[calc(100vh-5rem)] flex items-center justify-center bg-[#08090C] overflow-hidden pt-8 pb-20 lg:py-24">
-      
       {/* Background Graphic & Golden Ambient Glows */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#FFE600]/10 rounded-full blur-[180px] pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[450px] h-[450px] bg-[#FFE600]/8 rounded-full blur-[160px] pointer-events-none" />
       <div className="absolute inset-0 bg-grid-pattern opacity-35 pointer-events-none" />
 
-      {/* Decorative Golden AI Head Silhouette in Background */}
-      {/* <div className="absolute top-1/2 -left-20 -translate-y-1/2 w-[600px] h-[600px] opacity-25 pointer-events-none hidden xl:block">
-        <Image
-          src="/Banner.png"
-          alt="AI Circuit Background"
-          fill
-          className="object-contain object-left mix-blend-screen"
-          priority
-        />
-      </div> */}
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-10 items-center">
-          
           {/* Left Column: Hero Copy & Value Proposition */}
           <div className="lg:col-span-7 space-y-8 text-left">
-            
             {/* Powered by AI Badge */}
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#FFE600]/10 border border-[#FFE600]/30 backdrop-blur-md shadow-sm">
               <Sparkles className="w-4 h-4 text-[#FFE600] fill-[#FFE600]" />
@@ -86,15 +68,15 @@ export default function Banner(): React.JSX.Element {
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2">
               <Link
-                href="#cta"
+                href="/resume-analyzer"
                 className="relative group overflow-hidden inline-flex items-center justify-center gap-2.5 px-8 py-4 bg-[#FFE600] hover:bg-[#FFD000] text-black font-extrabold rounded-xl shadow-[0_0_30px_rgba(255,230,0,0.35)] hover:shadow-[0_0_40px_rgba(255,230,0,0.55)] transition-all hover:scale-[1.02] active:scale-[0.98] text-base"
               >
-                <span>Get Started Free</span>
+                <span>Audit Resume with AI</span>
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 stroke-[2.5]" />
               </Link>
 
               <Link
-                href="#features"
+                href="/#features"
                 className="inline-flex items-center justify-center gap-2 px-7 py-4 rounded-xl bg-transparent hover:bg-white/[0.04] border border-neutral-700 hover:border-[#FFE600]/60 text-white font-semibold transition-all backdrop-blur-md active:scale-[0.98] text-base"
               >
                 <span>Explore Features</span>
@@ -117,19 +99,13 @@ export default function Banner(): React.JSX.Element {
                 </div>
               ))}
             </div>
-
           </div>
 
           {/* Right Column: Live AI Diagnostic Card / HUD */}
           <div className="lg:col-span-5 relative">
-            
-            {/* Yellow Ambient Glow Behind Card */}
             <div className="absolute -inset-2 bg-[#FFE600]/15 rounded-3xl blur-2xl opacity-60 pointer-events-none" />
 
-            <div 
-              className="relative rounded-2xl bg-[#121316] border border-white/[0.1] hover:border-[#FFE600]/40 p-6 shadow-[0_20px_50px_rgba(0,0,0,0.8)] transition-all duration-300"
-            >
-              
+            <div className="relative rounded-2xl bg-[#121316] border border-white/[0.1] hover:border-[#FFE600]/40 p-6 shadow-[0_20px_50px_rgba(0,0,0,0.8)] transition-all duration-300">
               {/* Card Top Header */}
               <div className="flex items-center justify-between pb-4 border-b border-white/[0.08]">
                 <div className="flex items-center gap-2.5">
@@ -155,8 +131,6 @@ export default function Banner(): React.JSX.Element {
               {/* Central ATS Score Dial */}
               <div className="py-5 flex items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
-                  
-                  {/* Circular Dial */}
                   <div className="relative w-20 h-20 flex items-center justify-center">
                     <svg className="w-20 h-20 -rotate-90" viewBox="0 0 36 36">
                       <path
@@ -182,7 +156,6 @@ export default function Banner(): React.JSX.Element {
                     </div>
                   </div>
 
-                  {/* Target Details */}
                   <div className="space-y-1">
                     <div className="flex items-center gap-1.5">
                       <span className="text-xs font-bold text-[#FFE600]">Top 3% Candidate Tier</span>
@@ -332,17 +305,14 @@ export default function Banner(): React.JSX.Element {
                   Auto-syncing ATS rules...
                 </span>
                 <Link 
-                  href="#cta" 
+                  href="/resume-analyzer" 
                   className="text-[#FFE600] font-bold hover:text-yellow-300 transition-colors flex items-center gap-1"
                 >
                   Audit My Resume Free →
                 </Link>
               </div>
-
             </div>
-
           </div>
-
         </div>
       </div>
     </section>
