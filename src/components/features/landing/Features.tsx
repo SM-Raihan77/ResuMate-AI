@@ -8,9 +8,8 @@ import {
   TrendingUp, 
   Briefcase, 
   BookOpen, 
-  Award,
-  ArrowRight,
-  Sparkles
+  Award, 
+  ArrowRight 
 } from 'lucide-react';
 
 interface FeatureItem {
@@ -27,54 +26,52 @@ const featuresList: FeatureItem[] = [
     title: 'AI Chat Assistant',
     description: 'Conversational AI for real-time career guidance, resume improvement suggestions, and interview strategy.',
     linkText: 'Get Started',
-    href: '#cta'
+    href: '/#cta'
   },
   {
     icon: FileText,
     title: 'AI Resume Analyzer',
     description: 'Instant ATS score breakdown, keyword gap detection, formatting checks, and bullet point rewrites.',
-    linkText: 'Get Started',
-    href: '#cta'
+    linkText: 'Analyze Resume',
+    href: '/resume-analyzer'
   },
   {
     icon: TrendingUp,
     title: 'Career Recommendation Engine',
     description: 'AI analyzes your verified skill stack, interests, and profile to recommend high-growth career trajectories.',
     linkText: 'Get Started',
-    href: '#cta'
+    href: '/#cta'
   },
   {
     icon: Briefcase,
     title: 'Interview Simulator',
     description: 'Practice role-specific technical and behavioral interviews with real-time feedback and model answers.',
     linkText: 'Get Started',
-    href: '#cta'
+    href: '/#cta'
   },
   {
     icon: BookOpen,
     title: 'Learning Planner',
     description: 'Personalized learning roadmaps with concrete milestones, curated study materials, and skill verification.',
     linkText: 'Get Started',
-    href: '#cta'
+    href: '/#cta'
   },
   {
     icon: Award,
     title: 'Skill Assessment',
     description: 'Benchmark your skill stack and identify actionable gaps against top-tier tech hiring rubrics.',
     linkText: 'Get Started',
-    href: '#cta'
+    href: '/#cta'
   }
 ];
 
 export default function Features(): React.JSX.Element {
   return (
     <section id="features" className="py-20 lg:py-28 bg-[#08090C] text-white relative overflow-hidden">
-      
       {/* Background ambient lighting */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#FFE600]/5 rounded-full blur-[180px] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-14 lg:mb-16 space-y-3">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[#FFE600]">
@@ -123,7 +120,6 @@ export default function Features(): React.JSX.Element {
             );
           })}
         </div>
-
       </div>
     </section>
   );

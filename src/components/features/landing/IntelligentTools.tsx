@@ -14,8 +14,7 @@ import {
   ArrowRight, 
   Volume2, 
   GitBranch, 
-  DollarSign,
-  Award
+  DollarSign
 } from 'lucide-react';
 
 interface ToolHighlight {
@@ -64,13 +63,11 @@ export default function IntelligentTools(): React.JSX.Element {
 
   return (
     <section id="tools" className="py-20 lg:py-28 bg-[#08090C] text-white relative overflow-hidden border-t border-white/[0.04]">
-      
       {/* Background ambient lighting */}
       <div className="absolute top-1/3 right-0 w-[500px] h-[500px] bg-[#FFE600]/6 blur-[180px] pointer-events-none rounded-full" />
       <div className="absolute bottom-0 left-0 w-[450px] h-[450px] bg-[#FFE600]/4 blur-[160px] pointer-events-none rounded-full" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[#FFE600]">
@@ -81,7 +78,7 @@ export default function IntelligentTools(): React.JSX.Element {
           </p>
         </div>
 
-        {/* 6 Minimalist Feature List / Grid (2 Rows x 3 Cols) */}
+        {/* 6 Minimalist Feature List / Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
           {outcomeTools.map((tool, idx) => {
             const IconComp = tool.icon;
@@ -105,7 +102,6 @@ export default function IntelligentTools(): React.JSX.Element {
 
         {/* Interactive Live Playground Container */}
         <div className="rounded-2xl bg-[#121316] border border-white/[0.08] p-6 lg:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.8)] backdrop-blur-xl">
-          
           {/* Playground Tabs */}
           <div className="flex flex-wrap items-center justify-center gap-2 max-w-3xl mx-auto mb-8 p-1.5 rounded-xl bg-black/60 border border-white/[0.08]">
             <button
@@ -187,7 +183,7 @@ export default function IntelligentTools(): React.JSX.Element {
                 </div>
                 <div className="pt-2">
                   <Link
-                    href="#cta"
+                    href="/resume-analyzer"
                     className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#FFE600] text-black font-bold hover:bg-[#FFD000] text-sm shadow-md"
                   >
                     <span>Audit Resume in 10s</span>
@@ -239,7 +235,7 @@ export default function IntelligentTools(): React.JSX.Element {
                 </p>
                 <div className="pt-2">
                   <Link
-                    href="#cta"
+                    href="/#cta"
                     className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#FFE600] text-black font-bold hover:bg-[#FFD000] text-sm shadow-md"
                   >
                     <span>Start Mock Interview</span>
@@ -278,7 +274,7 @@ export default function IntelligentTools(): React.JSX.Element {
                 </p>
                 <div className="pt-2">
                   <Link
-                    href="#cta"
+                    href="/#cta"
                     className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#FFE600] text-black font-bold hover:bg-[#FFD000] text-sm shadow-md"
                   >
                     <span>Generate My Roadmap</span>
@@ -315,7 +311,7 @@ export default function IntelligentTools(): React.JSX.Element {
                 </p>
                 <div className="pt-2">
                   <Link
-                    href="#cta"
+                    href="/#cta"
                     className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#FFE600] text-black font-bold hover:bg-[#FFD000] text-sm shadow-md"
                   >
                     <span>Check Market Compensation</span>
@@ -340,9 +336,7 @@ export default function IntelligentTools(): React.JSX.Element {
               </div>
             </div>
           )}
-
         </div>
-
       </div>
     </section>
   );
