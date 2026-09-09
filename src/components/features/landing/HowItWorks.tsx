@@ -1,17 +1,10 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
 import { 
-  Target, 
-  Sparkles, 
-  CheckCircle2, 
   Compass, 
   Wand2, 
-  Trophy, 
-  ArrowRight,
-  TrendingUp,
-  Award
+  Trophy 
 } from 'lucide-react';
 
 interface StepItem {
@@ -45,12 +38,10 @@ const steps: StepItem[] = [
 export default function HowItWorks(): React.JSX.Element {
   return (
     <section id="how-it-works" className="py-20 lg:py-28 bg-[#08090C] text-white relative overflow-hidden border-t border-white/[0.04]">
-      
       {/* Ambient background glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] bg-[#FFE600]/5 rounded-full blur-[170px] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16 lg:mb-20 space-y-3">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[#FFE600]">
@@ -63,8 +54,7 @@ export default function HowItWorks(): React.JSX.Element {
 
         {/* 3 Steps Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 relative">
-          
-          {/* Subtle connecting line for desktop */}
+          {/* Connecting line for desktop */}
           <div className="hidden md:block absolute top-12 left-[20%] right-[20%] h-[1px] bg-gradient-to-r from-[#FFE600]/20 via-[#FFE600]/40 to-[#FFE600]/20" />
 
           {steps.map((item, index) => {
@@ -96,9 +86,7 @@ export default function HowItWorks(): React.JSX.Element {
               </div>
             );
           })}
-
         </div>
-
       </div>
     </section>
   );

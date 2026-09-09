@@ -12,8 +12,6 @@ import {
   FileText,
   Sliders,
   LogOut,
-  Zap,
-  CheckCircle2,
   Bot,
 } from "lucide-react";
 import { signOut, useSession } from "@/lib/auth-client";
@@ -25,7 +23,7 @@ export default function Navbar(): React.JSX.Element {
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const userDropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-  
+
   // Fetch session data from better-auth
   const { data: session } = useSession();
 
@@ -103,31 +101,38 @@ export default function Navbar(): React.JSX.Element {
               Home
             </Link>
             <Link
-              href="#tools"
+              href="/resume-analyzer"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#FFE600]/10 text-xs font-bold text-[#FFE600] border border-[#FFE600]/30 hover:bg-[#FFE600]/20 transition-all shadow-[0_0_12px_rgba(255,230,0,0.15)]"
+            >
+              <Sparkles className="w-3.5 h-3.5 fill-[#FFE600]" />
+              <span>Resume Analyzer</span>
+            </Link>
+            <Link
+              href="/#tools"
               className="text-sm font-medium text-gray-300 hover:text-[#FFE600] transition-colors"
             >
               Tools
             </Link>
             <Link
-              href="#how-it-works"
+              href="/#how-it-works"
               className="text-sm font-medium text-gray-300 hover:text-[#FFE600] transition-colors"
             >
               How It Works
             </Link>
             <Link
-              href="#features"
+              href="/#features"
               className="text-sm font-medium text-gray-300 hover:text-[#FFE600] transition-colors"
             >
               Features
             </Link>
             <Link
-              href="#testimonials"
+              href="/#testimonials"
               className="text-sm font-medium text-gray-300 hover:text-[#FFE600] transition-colors"
             >
               Testimonials
             </Link>
             <Link
-              href="#cta"
+              href="/#cta"
               className="text-sm font-medium text-gray-300 hover:text-[#FFE600] transition-colors"
             >
               Contact
@@ -139,13 +144,13 @@ export default function Navbar(): React.JSX.Element {
             {!session ? (
               <div className="flex items-center gap-4">
                 <Link
-                  href={"/auth/login"}
+                  href={"/login"}
                   className="text-sm font-medium text-gray-300 hover:text-white transition-colors cursor-pointer px-2 py-1"
                 >
                   Login
                 </Link>
                 <Link
-                  href="/auth/register"
+                  href="/register"
                   className="relative group overflow-hidden inline-flex items-center gap-2 px-5 py-2.5 bg-[#FFE600] hover:bg-[#FFD000] text-black font-bold rounded-xl shadow-[0_0_20px_rgba(255,230,0,0.3)] hover:shadow-[0_0_30px_rgba(255,230,0,0.5)] transition-all active:scale-[0.98] text-sm"
                 >
                   <span>Get Started</span>
@@ -181,6 +186,15 @@ export default function Navbar(): React.JSX.Element {
                         {session?.user?.email || ""}
                       </p>
                     </div>
+
+                    <Link
+                      href="/resume-analyzer"
+                      className="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-[#FFE600] hover:bg-white/[0.06] transition-colors"
+                      onClick={() => setIsUserDropdownOpen(false)}
+                    >
+                      <Sparkles className="w-4 h-4 text-[#FFE600]" />
+                      Resume Analyzer
+                    </Link>
 
                     <Link
                       href="/dashboard"
@@ -269,35 +283,43 @@ export default function Navbar(): React.JSX.Element {
               Home
             </Link>
             <Link
-              href="#tools"
+              href="/resume-analyzer"
+              className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold text-[#FFE600] bg-[#FFE600]/10 border border-[#FFE600]/30"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <Sparkles className="w-4 h-4 fill-[#FFE600]" />
+              <span>Resume Analyzer</span>
+            </Link>
+            <Link
+              href="/#tools"
               className="block px-3 py-2.5 rounded-xl text-sm font-medium text-gray-300 hover:bg-white/[0.06] hover:text-[#FFE600]"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Tools
             </Link>
             <Link
-              href="#how-it-works"
+              href="/#how-it-works"
               className="block px-3 py-2.5 rounded-xl text-sm font-medium text-gray-300 hover:bg-white/[0.06] hover:text-[#FFE600]"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               How It Works
             </Link>
             <Link
-              href="#features"
+              href="/#features"
               className="block px-3 py-2.5 rounded-xl text-sm font-medium text-gray-300 hover:bg-white/[0.06] hover:text-[#FFE600]"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Features
             </Link>
             <Link
-              href="#testimonials"
+              href="/#testimonials"
               className="block px-3 py-2.5 rounded-xl text-sm font-medium text-gray-300 hover:bg-white/[0.06] hover:text-[#FFE600]"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Testimonials
             </Link>
             <Link
-              href="#cta"
+              href="/#cta"
               className="block px-3 py-2.5 rounded-xl text-sm font-medium text-gray-300 hover:bg-white/[0.06] hover:text-[#FFE600]"
               onClick={() => setIsMobileMenuOpen(false)}
             >
@@ -309,14 +331,14 @@ export default function Navbar(): React.JSX.Element {
             {!session ? (
               <>
                 <Link
-                  href={"/auth/login"}
+                  href={"/login"}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="w-full text-center py-2.5 rounded-xl text-sm text-gray-300 bg-white/[0.04] border border-white/[0.08] hover:text-white font-medium cursor-pointer"
                 >
                   Login
                 </Link>
                 <Link
-                  href="/auth/register"
+                  href="/register"
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="w-full flex items-center justify-center gap-2 py-3 bg-[#FFE600] hover:bg-[#FFD000] text-black font-bold rounded-xl shadow-lg"
                 >
