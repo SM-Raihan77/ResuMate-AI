@@ -3,8 +3,11 @@
 import { useSearchParams } from "next/navigation";
 import { steps } from "./steps";
 import Breadcrumbs from "./BreadCrumbs";
+import { useState } from "react";
+import { ResumeValues } from "@/lib/validations";
 
 export default function ResumeEditor() {
+  const [resumeData, setResumeData] = useState<ResumeValues>({});
   const searchParams = useSearchParams();
   const currentStep = searchParams.get("step") || steps[0].key;
 
@@ -31,10 +34,17 @@ export default function ResumeEditor() {
         <div className="absolute bottom-0 top-0 flex w-full">
           <div className="w-full md:w-1/2 p-4 overflow-y-auto space-y-6">
             <Breadcrumbs currentStep={currentStep} setCurrentStep={setStep} />
-            {FormComponent && <FormComponent />}
+            {FormComponent && (
+              <FormComponent
+                resumeData={resumeData}
+                setResumeData={setResumeData}
+              />
+            )}
           </div>
           <div className="grow md:border-r border-card-border" />
-          <div className="hidden md:flex w-1/2">Right</div>
+          <div className="hidden md:flex w-1/2">
+            {JSON.stringify(resumeData, null, 2)}
+          </div>
         </div>
       </main>
       <div>Footer</div>

@@ -18,18 +18,22 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useEffect } from "react";
+import { EditorFormProps } from "@/lib/types";
 
-export default function PersonalInfoForm() {
+export default function PersonalInfoForm({
+  resumeData,
+  setResumeData,
+}: EditorFormProps) {
   const form = useForm<PersonalInfoValues>({
     resolver: zodResolver(personalInfoSchema),
     defaultValues: {
-      firstName: "",
-      lastName: "",
-      jobTitle: "",
-      city: "",
-      country: "",
-      phone: "",
-      email: "",
+      firstName: resumeData.firstName || "",
+      lastName: resumeData.lastName || "",
+      jobTitle: resumeData.jobTitle || "",
+      city: resumeData.city || "",
+      country: resumeData.country || "",
+      phone: resumeData.phone || "",
+      email: resumeData.email || "",
     },
   });
 
@@ -39,10 +43,10 @@ export default function PersonalInfoForm() {
       if (!isValid) {
         return;
       }
-      //Set the state
+      setResumeData({ ...resumeData, ...values });
     });
-    return subscribtion.unsubscribe();
-  }, [form]);
+    return () => subscribtion.unsubscribe();
+  }, [form, resumeData, setResumeData]);
 
   return (
     <Card>
@@ -239,7 +243,7 @@ export default function PersonalInfoForm() {
           <Button type="button" variant="outline" onClick={() => form.reset()}>
             Reset
           </Button>
-          <Button type="submit" form="personal-info">
+          <Button variant="secondary" form="personal-info">
             Next
           </Button>
         </Field>

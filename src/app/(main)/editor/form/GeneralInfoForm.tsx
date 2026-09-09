@@ -21,18 +21,35 @@ import {
   InputGroupText,
   InputGroupTextarea,
 } from "@/components/ui/input-group";
+import { EditorFormProps } from "@/lib/types";
 import { generalInfoSchema, GeneralInfoValues } from "@/lib/validations";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 
-export default function GeneralInfoForm() {
+export default function GeneralInfoForm({
+  resumeData,
+  setResumeData,
+}: EditorFormProps) {
   const form = useForm<GeneralInfoValues>({
     resolver: zodResolver(generalInfoSchema),
     defaultValues: {
-      title: "",
-      description: "",
+      title: resumeData.title || "",
+      description: resumeData.description || "",
     },
   });
+
+   useEffect(() => {
+      const subscribtion = form.watch(async (values) => {
+        const isValid = await form.trigger();
+        if (!isValid) {
+          return;
+        }
+        setResumeData({ ...resumeData, ...values });
+      });
+      return () => subscribtion.unsubscribe();
+    }, [form, resumeData, setResumeData]);
+
   return (
     <Card>
       <CardHeader>
