@@ -6,118 +6,122 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { EditorFormProps } from "@/lib/types";
-import { workExperienceSchema, WorkExperienceValues } from "@/lib/validations";
+import { educationSchema, EducationValues } from "@/lib/validations";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { GripHorizontal } from "lucide-react";
 import { useEffect } from "react";
-import { Controller, useFieldArray, useForm, UseFormReturn } from "react-hook-form";
+import {
+  Controller,
+  useFieldArray,
+  useForm,
+  UseFormReturn,
+} from "react-hook-form";
 
-export default function WorkExperienceForm({
+export default function EducationInfoForm({
   resumeData,
   setResumeData,
 }: EditorFormProps) {
-  const form = useForm<WorkExperienceValues>({
-    resolver: zodResolver(workExperienceSchema),
+  const form = useForm<EducationValues>({
+    resolver: zodResolver(educationSchema),
     defaultValues: {
-      workExperiences: resumeData.workExperiences || [],
+      educations: resumeData.educations || [],
     },
   });
 
   useEffect(() => {
-    const subscribtion = form.watch(async (values) => {
+    const subscription = form.watch(async (values) => {
       const isValid = await form.trigger();
       if (!isValid) {
         return;
       }
       setResumeData({
         ...resumeData,
-        workExperiences:
-          values.workExperiences?.filter((exp) => exp !== undefined) || [],
+        educations: values.educations?.filter((edu) => edu !== undefined) || [],
       });
     });
-    return () => subscribtion.unsubscribe();
+    return () => subscription.unsubscribe();
   }, [form, resumeData, setResumeData]);
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
-    name: "workExperiences",
+    name: "educations",
   });
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Work experience</CardTitle>
+        <CardTitle>Education</CardTitle>
         <CardDescription>
-          Add as many work experiences as you like.
+          Add as many education entries as you like.
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
         <div className="space-y-4">
-        {fields.map((field, index) => (
-          <WorkExperienceItem
-            key={field.id}
-            form={form}
-            id={field.id}
-            index={index}
-            remove={remove}
-          />
-        ))}
+          {fields.map((field, index) => (
+            <EducationItem
+              key={field.id}
+              id={field.id}
+              form={form}
+              index={index}
+              remove={remove}
+            />
+          ))}
         </div>
         <Button
           type="button"
-          variant={"secondary"}
+          variant="secondary"
           onClick={() =>
             append({
-              position: "",
-              company: "",
+              degree: "",
+              school: "",
               startDate: "",
               endDate: "",
-              description: "",
             })
           }
         >
-          Add Work Experience
+          Add education
         </Button>
       </CardContent>
     </Card>
   );
 }
 
-interface WorkExperienceItemProps {
-  form: UseFormReturn<WorkExperienceValues>;
+interface EducationItemProps {
   id: string;
+  form: UseFormReturn<EducationValues>;
   index: number;
   remove: (index: number) => void;
 }
 
-export function WorkExperienceItem({
-  form,
-  index,
-  remove,
-}: WorkExperienceItemProps) {
+export function EducationItem({ form, index, remove }: EducationItemProps) {
   return (
     <div className="space-y-4 rounded-md border border-gray-600 bg-background p-4">
       {/* HEADER */}
       <div className="flex items-center justify-between gap-2">
-        <span className="font-semibold">Work experience {index + 1}</span>
+        <span className="font-semibold">Education {index + 1}</span>
         <GripHorizontal className="size-5 cursor-grab text-muted-foreground focus:outline-none" />
       </div>
 
-      {/* JOB TITLE */}
+      {/* DEGREE / PROGRAM */}
       <Controller
-        name={`workExperiences.${index}.position`}
+        name={`educations.${index}.degree`}
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name}>Job title</FieldLabel>
+            <FieldLabel htmlFor={field.name}>Degree</FieldLabel>
             <Input
               {...field}
               id={field.name}
               aria-invalid={fieldState.invalid}
+              placeholder="e.g. Bachelor of Science in Computer Science"
               autoFocus
             />
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -125,17 +129,18 @@ export function WorkExperienceItem({
         )}
       />
 
-      {/* COMPANY */}
+      {/* SCHOOL / INSTITUTION */}
       <Controller
-        name={`workExperiences.${index}.company`}
+        name={`educations.${index}.school`}
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name}>Company</FieldLabel>
+            <FieldLabel htmlFor={field.name}>School / University</FieldLabel>
             <Input
               {...field}
               id={field.name}
               aria-invalid={fieldState.invalid}
+              placeholder="e.g. University of Oxford"
             />
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>
@@ -145,7 +150,7 @@ export function WorkExperienceItem({
       {/* DATES */}
       <div className="grid grid-cols-2 gap-3">
         <Controller
-          name={`workExperiences.${index}.startDate`}
+          name={`educations.${index}.startDate`}
           control={form.control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
@@ -163,7 +168,7 @@ export function WorkExperienceItem({
         />
 
         <Controller
-          name={`workExperiences.${index}.endDate`}
+          name={`educations.${index}.endDate`}
           control={form.control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
@@ -177,30 +182,13 @@ export function WorkExperienceItem({
               />
               <FieldDescription>
                 Leave <span className="font-semibold">end date</span> empty if
-                you are currently working here.
+                you are currently studying here.
               </FieldDescription>
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </Field>
           )}
         />
       </div>
-
-      {/* DESCRIPTION */}
-      <Controller
-        name={`workExperiences.${index}.description`}
-        control={form.control}
-        render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name}>Description</FieldLabel>
-            <Textarea
-              {...field}
-              id={field.name}
-              aria-invalid={fieldState.invalid}
-            />
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-          </Field>
-        )}
-      />
 
       {/* FOOTER ACTIONS */}
       <Button variant="destructive" type="button" onClick={() => remove(index)}>
