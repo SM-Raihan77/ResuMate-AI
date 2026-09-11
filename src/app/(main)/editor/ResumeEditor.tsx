@@ -5,6 +5,7 @@ import { steps } from "./steps";
 import Breadcrumbs from "./BreadCrumbs";
 import { useState } from "react";
 import { ResumeValues } from "@/lib/validations";
+import ResumePreviewSection from "./ResumePreviewSection";
 
 export default function ResumeEditor() {
   const [resumeData, setResumeData] = useState<ResumeValues>({});
@@ -42,9 +43,10 @@ export default function ResumeEditor() {
             )}
           </div>
           <div className="grow md:border-r border-card-border" />
-          <div className="hidden md:flex w-1/2">
-            {JSON.stringify(resumeData, null, 2)}
-          </div>
+          <ResumePreviewSection
+            resumeData={resumeData}
+            setResumeData={setResumeData}
+          />
         </div>
       </main>
       <div>Footer</div>
