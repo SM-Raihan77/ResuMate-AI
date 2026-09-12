@@ -17,7 +17,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { EditorFormProps } from "@/lib/types";
 
 export default function PersonalInfoForm({
@@ -36,6 +36,8 @@ export default function PersonalInfoForm({
       email: resumeData.email || "",
     },
   });
+  
+  const photoInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const subscribtion = form.watch(async (values) => {
@@ -76,17 +78,17 @@ export default function PersonalInfoForm({
                         const file = e.target.files?.[0];
                         fieldValues.onChange(file);
                       }}
-                      //   ref={photoInputRef}
+                        ref={photoInputRef}
                     />
                     <Button
                       variant="secondary"
                       type="button"
-                      //   onClick={() => {
-                      //     fieldValues.onChange(null);
-                      //     if (photoInputRef.current) {
-                      //       photoInputRef.current.value = "";
-                      //     }
-                      //   }}
+                        onClick={() => {
+                          fieldValues.onChange(null);
+                          if (photoInputRef.current) {
+                            photoInputRef.current.value = "";
+                          }
+                        }}
                     >
                       Remove
                     </Button>
