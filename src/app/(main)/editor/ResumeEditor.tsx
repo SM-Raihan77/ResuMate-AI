@@ -7,6 +7,7 @@ import { useState } from "react";
 import { ResumeValues } from "@/lib/validations";
 import ResumePreviewSection from "./ResumePreviewSection";
 import Footer from "./Footer";
+import { cn } from "@/utils";
 
 export default function ResumeEditor() {
   const [resumeData, setResumeData] = useState<ResumeValues>({});
@@ -35,7 +36,12 @@ export default function ResumeEditor() {
       </header>
       <main className="relative grow">
         <div className="absolute bottom-0 top-0 flex w-full">
-          <div className="w-full md:w-1/2 p-4 overflow-y-auto space-y-6">
+          <div
+            className={cn(
+              "w-full space-y-6 overflow-y-auto p-3 md:block md:w-1/2",
+              showSmResumePreview && "hidden",
+            )}
+          >
             <Breadcrumbs currentStep={currentStep} setCurrentStep={setStep} />
             {FormComponent && (
               <FormComponent
@@ -48,6 +54,7 @@ export default function ResumeEditor() {
           <ResumePreviewSection
             resumeData={resumeData}
             setResumeData={setResumeData}
+            className={cn(showSmResumePreview && "flex")}
           />
         </div>
       </main>

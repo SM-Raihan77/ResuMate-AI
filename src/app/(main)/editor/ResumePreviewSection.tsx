@@ -2,6 +2,7 @@ import ResumePreview from "@/components/ResumePreview";
 import { ResumeValues } from "@/lib/validations";
 import ColorPicker from "./ColorPicker";
 import BorderStyleButton from "./BorderStyleButton";
+import { cn } from "@/utils";
 
 interface ResumePreviewSectionProps {
   resumeData: ResumeValues;
@@ -12,9 +13,10 @@ interface ResumePreviewSectionProps {
 export default function ResumePreviewSection({
   resumeData,
   setResumeData,
+  className,
 }: ResumePreviewSectionProps) {
   return (
-    <div className="group relative hidden md:flex w-1/2">
+    <div className={cn("group relative hidden w-full md:flex md:w-1/2", className)}>
       <div className="absolute left-0 top-0 flex flex-none flex-col gap-3 opacity-50 transition-opacity group-hover:opacity-100 lg:left-3 lg:top-3 xl:opacity-100">
         <ColorPicker
           color={resumeData.colorHex}

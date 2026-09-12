@@ -15,6 +15,23 @@ import {
 import { Input } from "@/components/ui/input";
 import { EditorFormProps } from "@/lib/types";
 import { educationSchema, EducationValues } from "@/lib/validations";
+import {
+  closestCenter,
+  DndContext,
+  DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { GripHorizontal } from "lucide-react";
 import { useEffect } from "react";
@@ -50,10 +67,32 @@ export default function EducationInfoForm({
     return () => subscription.unsubscribe();
   }, [form, resumeData, setResumeData]);
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, move } = useFieldArray({
     control: form.control,
     name: "educations",
   });
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = fields.findIndex((field) => field.id === active.id);
+      const newIndex = fields.findIndex((field) => field.id === over.id);
+
+      move(oldIndex, newIndex);
+    }
+  }
 
   return (
     <Card>
@@ -65,15 +104,27 @@ export default function EducationInfoForm({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-4">
-          {fields.map((field, index) => (
-            <EducationItem
-              key={field.id}
-              id={field.id}
-              form={form}
-              index={index}
-              remove={remove}
-            />
-          ))}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+            modifiers={[restrictToVerticalAxis]}
+          >
+            <SortableContext
+              items={fields}
+              strategy={verticalListSortingStrategy}
+            >
+              {fields.map((field, index) => (
+                <EducationItem
+                  key={field.id}
+                  id={field.id}
+                  form={form}
+                  index={index}
+                  remove={remove}
+                />
+              ))}
+            </SortableContext>
+          </DndContext>
         </div>
         <Button
           type="button"
@@ -101,13 +152,40 @@ interface EducationItemProps {
   remove: (index: number) => void;
 }
 
-export function EducationItem({ form, index, remove }: EducationItemProps) {
+export function EducationItem({ form, id, index, remove }: EducationItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 1 : 0,
+    position: "relative" as const,
+  };
+
   return (
-    <div className="space-y-4 rounded-md border border-gray-600 bg-background p-4">
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="space-y-4 rounded-md border border-gray-600 bg-background p-4"
+    >
       {/* HEADER */}
       <div className="flex items-center justify-between gap-2">
         <span className="font-semibold">Education {index + 1}</span>
-        <GripHorizontal className="size-5 cursor-grab text-muted-foreground focus:outline-none" />
+        <div
+          {...attributes}
+          {...listeners}
+          className="cursor-grab focus:outline-none"
+        >
+          <GripHorizontal className="size-5 text-muted-foreground" />
+        </div>
       </div>
 
       {/* DEGREE / PROGRAM */}
