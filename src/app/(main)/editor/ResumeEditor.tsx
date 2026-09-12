@@ -6,11 +6,13 @@ import Breadcrumbs from "./BreadCrumbs";
 import { useState } from "react";
 import { ResumeValues } from "@/lib/validations";
 import ResumePreviewSection from "./ResumePreviewSection";
+import Footer from "./Footer";
 
 export default function ResumeEditor() {
   const [resumeData, setResumeData] = useState<ResumeValues>({});
   const searchParams = useSearchParams();
   const currentStep = searchParams.get("step") || steps[0].key;
+  const [showSmResumePreview, setShowSmResumePreview] = useState(false);
 
   function setStep(key: string) {
     const params = new URLSearchParams(searchParams);
@@ -49,7 +51,12 @@ export default function ResumeEditor() {
           />
         </div>
       </main>
-      <div>Footer</div>
+      <Footer
+        currentStep={currentStep}
+        setCurrentStep={setStep}
+        showSmResumePreview={showSmResumePreview}
+        setShowSmResumePreview={setShowSmResumePreview}
+      />
     </div>
   );
 }
