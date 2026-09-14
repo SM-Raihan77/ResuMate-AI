@@ -39,29 +39,29 @@ export default function KeywordGaps({
   };
 
   return (
-    <div className="rounded-3xl bg-[#121316] border border-white/[0.08] p-6 lg:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.8)] space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/[0.08]">
+    <div className="rounded-2xl bg-neutral-900/80 border border-neutral-800 p-6 lg:p-8 shadow-xl space-y-6 backdrop-blur-xl">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-neutral-800">
         <div>
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#FFE600] animate-pulse" />
-            <h3 className="text-xl font-bold text-white tracking-tight">
+            <span className="w-2 h-2 rounded-full bg-[#FFE600]" />
+            <h3 className="text-lg font-bold text-white tracking-tight">
               Keyword Gap Analysis
             </h3>
           </div>
-          <p className="text-xs sm:text-sm text-gray-400 mt-1">
+          <p className="text-xs sm:text-sm text-neutral-400 mt-1">
             Critical industry and job-specific keywords to bridge ATS ranking gaps. Click any tag to copy.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex rounded-xl bg-black/60 p-1 border border-white/[0.08]">
+        <div className="flex items-center gap-2.5">
+          <div className="flex rounded-lg bg-neutral-950 p-1 border border-neutral-800">
             <button
               type="button"
               onClick={() => setActiveTab("missing")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === "missing"
-                  ? "bg-[#FFE600] text-black shadow-sm"
-                  : "text-gray-400 hover:text-white"
+                  ? "bg-neutral-800 text-white shadow-sm"
+                  : "text-neutral-400 hover:text-white"
               }`}
             >
               Missing ({missingKeywords.length})
@@ -70,10 +70,10 @@ export default function KeywordGaps({
               <button
                 type="button"
                 onClick={() => setActiveTab("matched")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
                   activeTab === "matched"
-                    ? "bg-[#FFE600] text-black shadow-sm"
-                    : "text-gray-400 hover:text-white"
+                    ? "bg-neutral-800 text-white shadow-sm"
+                    : "text-neutral-400 hover:text-white"
                 }`}
               >
                 Matched ({matchedKeywords.length})
@@ -85,7 +85,7 @@ export default function KeywordGaps({
             <button
               type="button"
               onClick={handleCopyAll}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.1] text-xs font-semibold text-gray-200 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 text-xs font-medium text-neutral-300 hover:text-white transition-colors cursor-pointer"
             >
               {copiedAll ? (
                 <>
@@ -104,24 +104,24 @@ export default function KeywordGaps({
       </div>
 
       <div className="relative">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
         <input
           type="text"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Filter keywords (e.g. Docker, System Design, GraphQL)..."
-          className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-black/40 border border-white/[0.08] focus:border-[#FFE600]/60 text-xs sm:text-sm text-white placeholder-gray-500 focus:outline-none transition-colors"
+          className="w-full pl-10 pr-4 py-2 rounded-xl bg-neutral-950 border border-neutral-800 focus:border-[#FFE600] text-xs sm:text-sm text-white placeholder-neutral-500 focus:outline-none transition-colors"
         />
       </div>
 
       {activeTab === "missing" ? (
         <div>
           {filteredMissing.length === 0 ? (
-            <div className="py-8 text-center text-gray-400 text-xs">
+            <div className="py-8 text-center text-neutral-500 text-xs">
               No matching missing keywords found.
             </div>
           ) : (
-            <div className="flex flex-wrap gap-2.5">
+            <div className="flex flex-wrap gap-2">
               {filteredMissing.map((keyword, idx) => {
                 const isCopied = copiedKeyword === keyword;
                 return (
@@ -129,13 +129,13 @@ export default function KeywordGaps({
                     key={idx}
                     type="button"
                     onClick={() => handleCopy(keyword)}
-                    className="group relative inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-rose-500/[0.08] hover:bg-rose-500/[0.18] border border-rose-500/25 hover:border-rose-500/50 text-xs font-medium text-rose-300 transition-all cursor-pointer active:scale-95"
+                    className="group relative inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-rose-500/[0.08] hover:bg-rose-500/[0.15] border border-rose-500/20 hover:border-rose-500/40 text-xs font-medium text-rose-300 transition-all cursor-pointer active:scale-95"
                     title="Click to copy keyword"
                   >
-                    <PlusCircle className="w-3.5 h-3.5 text-rose-400 group-hover:rotate-90 transition-transform" />
+                    <PlusCircle className="w-3 h-3 text-rose-400 group-hover:rotate-90 transition-transform" />
                     <span>{keyword}</span>
                     {isCopied ? (
-                      <Check className="w-3.5 h-3.5 text-emerald-400" />
+                      <Check className="w-3 h-3 text-emerald-400" />
                     ) : (
                       <Copy className="w-3 h-3 text-rose-400 opacity-0 group-hover:opacity-100 transition-opacity" />
                     )}
@@ -145,9 +145,9 @@ export default function KeywordGaps({
             </div>
           )}
 
-          <div className="mt-5 p-3.5 rounded-xl bg-[#FFE600]/5 border border-[#FFE600]/20 flex items-start gap-3">
+          <div className="mt-5 p-3 rounded-xl bg-[#FFE600]/5 border border-[#FFE600]/20 flex items-start gap-3">
             <Sparkles className="w-4 h-4 text-[#FFE600] shrink-0 mt-0.5" />
-            <p className="text-xs text-gray-300 leading-relaxed">
+            <p className="text-xs text-neutral-300 leading-relaxed">
               <strong className="text-[#FFE600] font-semibold">Optimization Tip: </strong>
               Naturally integrate these missing keywords into your Skills section and bullet point action statements. Never keyword-stuff in invisible text, as modern ATS flags hidden text as fraudulent.
             </p>
@@ -156,15 +156,15 @@ export default function KeywordGaps({
       ) : (
         <div>
           {filteredMatched.length === 0 ? (
-            <div className="py-8 text-center text-gray-400 text-xs">
+            <div className="py-8 text-center text-neutral-500 text-xs">
               No matching detected keywords found.
             </div>
           ) : (
-            <div className="flex flex-wrap gap-2.5">
+            <div className="flex flex-wrap gap-2">
               {filteredMatched.map((keyword, idx) => (
                 <div
                   key={idx}
-                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-500/[0.08] border border-emerald-500/25 text-xs font-medium text-emerald-300"
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/[0.08] border border-emerald-500/20 text-xs font-medium text-emerald-300"
                 >
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                   <span>{keyword}</span>

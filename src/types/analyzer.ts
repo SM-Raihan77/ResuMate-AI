@@ -11,6 +11,9 @@ export interface BulletPointRewrite {
 }
 
 export interface ResumeAnalysisResult {
+  id?: string;
+  resumeId?: string;
+  userId?: string;
   atsScore: number;
   scoreBreakdown: ScoreBreakdown;
   missingKeywords: string[];
@@ -22,10 +25,14 @@ export interface ResumeAnalysisResult {
   targetRoleIdentified?: string;
   detectedExperienceLevel?: string;
   analyzedAt?: string;
+  createdAt?: string;
   isDemo?: boolean;
 }
 
 export interface AnalyzeResumeRequest {
+  resumeId?: string;
   resumeText?: string;
   jobDescription?: string;
+  title?: string;
 }
+

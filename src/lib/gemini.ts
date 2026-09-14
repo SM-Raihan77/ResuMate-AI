@@ -1,5 +1,12 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { ResumeAnalysisResult } from "@/types/analyzer";
+import {
+  InterviewQuestion,
+  InterviewAnswerEvaluation,
+  InterviewFinalReport,
+  InterviewDifficulty,
+  InterviewType,
+} from "@/types/interview";
 
 /**
  * Resolves the Gemini API key from standard environment variable names.
@@ -255,6 +262,654 @@ export function generateDemoAnalysis(
     targetRoleIdentified: lowerJD ? "Target Role (from Job Description)" : "Full Stack Software Engineer",
     detectedExperienceLevel: wordCount > 500 ? "Mid - Senior Level" : "Associate / Mid Level",
     analyzedAt: new Date().toISOString(),
+    isDemo: true,
+  };
+}
+
+/* =========================================================================
+ * AI MOCK INTERVIEW ENGINE
+ * ========================================================================= */
+
+export interface GenerateInterviewQuestionsParams {
+  role: string;
+  difficulty: InterviewDifficulty;
+  interviewType: InterviewType;
+  questionCount?: number;
+  jobDescription?: string;
+  resumeText?: string;
+}
+
+/**
+ * Generates tailored, realistic interview questions via Google Gemini.
+ */
+export async function generateInterviewQuestionsWithGemini(
+  params: GenerateInterviewQuestionsParams
+): Promise<{ questions: InterviewQuestion[]; isDemo: boolean }> {
+  const count = params.questionCount || 5;
+  const apiKey = getGeminiApiKey();
+
+  if (!apiKey) {
+    console.warn("No GEMINI_API_KEY found. Returning smart heuristic demo interview questions.");
+    return {
+      questions: generateDemoInterviewQuestions(params),
+      isDemo: true,
+    };
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
+
+  const systemInstruction = `You are an elite Senior Staff Engineer, Engineering Director, and Bar Raiser at top tech companies (Google, Meta, Amazon, Netflix, Stripe).
+Your job is to generate a realistic, high-signal mock interview question set calibrated precisely for the requested role, seniority level, and interview type.
+
+Guidelines:
+- Seniority Calibration:
+  - Junior: Fundamental language concepts, basic debugging, clean code, learning mindset.
+  - Mid: Framework lifecycle, concurrency, API design, performance optimization, trade-offs.
+  - Senior: Scalability, resilience, edge cases, cross-cutting architectural choices, STAR leadership.
+  - Lead/Staff: Complex distributed system trade-offs, organization-level impact, mentoring, RFC design.
+- If resume or job description is provided, customize questions specifically referencing their skills or required competencies.
+- For each question:
+  - Include an exact category (technical, behavioral, system-design, situational).
+  - Include 3-6 expected keywords / core concepts the candidate should mention.
+  - Include a subtle context/scenario explaining why this question is asked.
+  - Include a short hint that can guide the candidate if stuck.
+  - Include a high-quality model sample answer demonstrating ideal depth and structure.`;
+
+  const prompt = `Generate exactly ${count} interview questions for:
+ROLE: ${params.role}
+SENIORITY: ${params.difficulty.toUpperCase()}
+INTERVIEW TYPE: ${params.interviewType.toUpperCase()}
+${params.jobDescription ? `TARGET JOB DESCRIPTION:\n"""${params.jobDescription.slice(0, 4000)}"""\n` : ""}
+${params.resumeText ? `CANDIDATE RESUME PROFILE:\n"""${params.resumeText.slice(0, 4000)}"""\n` : ""}
+
+Return the response matching the strict JSON schema.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+      config: {
+        systemInstruction,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            questions: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  id: { type: Type.STRING },
+                  question: { type: Type.STRING },
+                  category: {
+                    type: Type.STRING,
+                    enum: ["technical", "behavioral", "system-design", "situational"],
+                  },
+                  expectedKeywords: {
+                    type: Type.ARRAY,
+                    items: { type: Type.STRING },
+                  },
+                  context: { type: Type.STRING },
+                  hint: { type: Type.STRING },
+                  sampleAnswer: { type: Type.STRING },
+                },
+                required: ["id", "question", "category", "expectedKeywords"],
+              },
+            },
+          },
+          required: ["questions"],
+        },
+      },
+    });
+
+    const parsed = JSON.parse(response.text || "{}");
+    if (!parsed.questions || !Array.isArray(parsed.questions) || parsed.questions.length === 0) {
+      throw new Error("Invalid structure returned from Gemini model.");
+    }
+
+    const formattedQuestions: InterviewQuestion[] = parsed.questions.map((q: any, i: number) => ({
+      id: q.id || `q_${Date.now()}_${i + 1}`,
+      question: q.question,
+      category: q.category || "technical",
+      expectedKeywords: q.expectedKeywords || [],
+      context: q.context || undefined,
+      hint: q.hint || undefined,
+      sampleAnswer: q.sampleAnswer || undefined,
+    }));
+
+    return {
+      questions: formattedQuestions,
+      isDemo: false,
+    };
+  } catch (error: any) {
+    console.error("Gemini generateInterviewQuestions error:", error);
+    return {
+      questions: generateDemoInterviewQuestions(params),
+      isDemo: true,
+    };
+  }
+}
+
+export interface EvaluateInterviewAnswerParams {
+  question: InterviewQuestion;
+  userAnswer: string;
+  role: string;
+  difficulty: InterviewDifficulty;
+  interviewType: InterviewType;
+}
+
+/**
+ * Evaluates a candidate's answer to an interview question in real-time.
+ */
+export async function evaluateInterviewAnswerWithGemini(
+  params: EvaluateInterviewAnswerParams
+): Promise<InterviewAnswerEvaluation> {
+  const apiKey = getGeminiApiKey();
+
+  if (!apiKey) {
+    console.warn("No GEMINI_API_KEY found. Generating demo answer evaluation.");
+    return generateDemoAnswerEvaluation(params);
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
+
+  const systemInstruction = `You are an elite Senior Staff Tech Interviewer and Hiring Committee Chair.
+Evaluate the candidate's answer strictly, constructively, and thoroughly.
+
+Evaluation Rubric:
+1. score (0-100):
+   - 90-100: Staff/Principal-level answer. Clear structure, edge cases considered, high-impact terminology, STAR framework executed flawlessly.
+   - 75-89: Solid Senior hire. Covers core concept well, minor missed optimizations or trade-offs.
+   - 60-74: Mid-level answer. Understands basics but lacks depth, quantitative impact, or structured problem-solving.
+   - <60: Insufficient, vague, factually incorrect, or non-responsive.
+2. strengths: 2-3 specific points the candidate communicated effectively.
+3. weaknesses: 2-3 concrete gaps, missed trade-offs, or weak phrasing.
+4. idealAnswer: A concise, exemplary answer showing how a Staff Engineer / Top Performer would structure the response.
+5. starCompliance (if behavioral/situational): Breakdown of Situation, Task, Action, Result, with score.`;
+
+  const prompt = `
+ROLE: ${params.role} (${params.difficulty} level)
+INTERVIEW FOCUS: ${params.interviewType}
+QUESTION: "${params.question.question}"
+EXPECTED KEYWORDS: ${params.question.expectedKeywords.join(", ")}
+
+CANDIDATE'S SUBMITTED ANSWER:
+"""
+${params.userAnswer}
+"""
+
+Evaluate this response thoroughly and output structured JSON.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+      config: {
+        systemInstruction,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            score: { type: Type.INTEGER },
+            strengths: {
+              type: Type.ARRAY,
+              items: { type: Type.STRING },
+            },
+            weaknesses: {
+              type: Type.ARRAY,
+              items: { type: Type.STRING },
+            },
+            idealAnswer: { type: Type.STRING },
+            starCompliance: {
+              type: Type.OBJECT,
+              properties: {
+                situation: { type: Type.STRING },
+                task: { type: Type.STRING },
+                action: { type: Type.STRING },
+                result: { type: Type.STRING },
+                score: { type: Type.INTEGER },
+              },
+              required: ["situation", "task", "action", "result", "score"],
+            },
+          },
+          required: ["score", "strengths", "weaknesses", "idealAnswer"],
+        },
+      },
+    });
+
+    const parsed = JSON.parse(response.text || "{}");
+
+    return {
+      questionId: params.question.id,
+      question: params.question.question,
+      userAnswer: params.userAnswer,
+      score: parsed.score ?? 75,
+      strengths: parsed.strengths ?? ["Clear initial approach"],
+      weaknesses: parsed.weaknesses ?? ["Could provide deeper trade-off analysis"],
+      idealAnswer: parsed.idealAnswer ?? params.question.sampleAnswer ?? "An ideal response would emphasize performance trade-offs and business impact.",
+      starCompliance: parsed.starCompliance,
+      isDemo: false,
+    };
+  } catch (error: any) {
+    console.error("Gemini evaluateInterviewAnswer error:", error);
+    return generateDemoAnswerEvaluation(params);
+  }
+}
+
+export interface GenerateInterviewReportParams {
+  role: string;
+  difficulty: InterviewDifficulty;
+  interviewType: InterviewType;
+  evaluations: InterviewAnswerEvaluation[];
+}
+
+/**
+ * Aggregates all individual question evaluations into a comprehensive final scorecard.
+ */
+export async function generateInterviewReportWithGemini(
+  params: GenerateInterviewReportParams
+): Promise<InterviewFinalReport> {
+  const apiKey = getGeminiApiKey();
+
+  if (!apiKey) {
+    console.warn("No GEMINI_API_KEY found. Generating demo final report.");
+    return generateDemoInterviewReport(params);
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
+
+  const systemInstruction = `You are a Principal Engineering Director and Hiring Committee Bar Raiser.
+Synthesize the candidate's complete interview session transcript and individual question evaluations into an executive hiring scorecard.
+
+Calculate:
+1. overallScore (0-100 weighted average).
+2. grade: "Staff / Principal Ready" (90+), "Senior Hire" (78-89), "Mid-Level Hire" (65-77), or "Borderline / Needs Practice" (<65).
+3. categoryScores:
+   - technicalProficiency (0-100)
+   - communicationClarity (0-100)
+   - problemSolving (0-100)
+   - cultureAndSTAR (0-100)
+4. keyStrengths: 3-4 top highlights across the interview.
+5. criticalImprovements: 3-4 actionable growth priorities.
+6. detailedFeedback: 2-3 paragraph executive summary of the performance.
+7. readinessRecommendation: Direct verdict on readiness for Tier-1 engineering interviews.`;
+
+  const transcriptSummary = params.evaluations
+    .map(
+      (ev, idx) => `
+[QUESTION ${idx + 1}] (Score: ${ev.score}/100)
+Q: ${ev.question}
+A: ${ev.userAnswer}
+Feedback: Strengths - ${ev.strengths.join(", ")}; Weaknesses - ${ev.weaknesses.join(", ")}
+`
+    )
+    .join("\n");
+
+  const prompt = `
+ROLE: ${params.role} (${params.difficulty} Level)
+FOCUS: ${params.interviewType}
+EVALUATED TRANSCRIPT:
+${transcriptSummary}
+
+Synthesize the final interview report matching the schema.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+      config: {
+        systemInstruction,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            overallScore: { type: Type.INTEGER },
+            grade: {
+              type: Type.STRING,
+              enum: [
+                "Staff / Principal Ready",
+                "Senior Hire",
+                "Mid-Level Hire",
+                "Borderline / Needs Practice",
+              ],
+            },
+            categoryScores: {
+              type: Type.OBJECT,
+              properties: {
+                technicalProficiency: { type: Type.INTEGER },
+                communicationClarity: { type: Type.INTEGER },
+                problemSolving: { type: Type.INTEGER },
+                cultureAndSTAR: { type: Type.INTEGER },
+              },
+              required: [
+                "technicalProficiency",
+                "communicationClarity",
+                "problemSolving",
+                "cultureAndSTAR",
+              ],
+            },
+            keyStrengths: {
+              type: Type.ARRAY,
+              items: { type: Type.STRING },
+            },
+            criticalImprovements: {
+              type: Type.ARRAY,
+              items: { type: Type.STRING },
+            },
+            detailedFeedback: { type: Type.STRING },
+            readinessRecommendation: { type: Type.STRING },
+          },
+          required: [
+            "overallScore",
+            "grade",
+            "categoryScores",
+            "keyStrengths",
+            "criticalImprovements",
+            "detailedFeedback",
+            "readinessRecommendation",
+          ],
+        },
+      },
+    });
+
+    const parsed = JSON.parse(response.text || "{}");
+
+    const questionBreakdowns = params.evaluations.map((ev) => ({
+      questionId: ev.questionId,
+      question: ev.question,
+      userAnswer: ev.userAnswer,
+      score: ev.score,
+      feedback: ev.weaknesses.length > 0 ? ev.weaknesses.join(". ") : "Solid answer.",
+      betterAlternative: ev.idealAnswer,
+    }));
+
+    return {
+      overallScore: parsed.overallScore ?? 80,
+      grade: parsed.grade ?? "Senior Hire",
+      categoryScores: parsed.categoryScores ?? {
+        technicalProficiency: 82,
+        communicationClarity: 80,
+        problemSolving: 78,
+        cultureAndSTAR: 80,
+      },
+      keyStrengths: parsed.keyStrengths ?? [
+        "Strong fundamental clarity and enthusiasm",
+        "Structured thought process",
+      ],
+      criticalImprovements: parsed.criticalImprovements ?? [
+        "Elaborate more on distributed scaling edge cases",
+        "Quantify business results using concrete percentages or latency metrics",
+      ],
+      detailedFeedback: parsed.detailedFeedback ?? "The candidate demonstrated solid technical competence across multiple core interview domains.",
+      readinessRecommendation: parsed.readinessRecommendation ?? "Recommended for on-site technical rounds with minor focus on system trade-offs.",
+      questionBreakdowns,
+      completedAt: new Date().toISOString(),
+      isDemo: false,
+    };
+  } catch (error: any) {
+    console.error("Gemini generateInterviewReport error:", error);
+    return generateDemoInterviewReport(params);
+  }
+}
+
+/* =========================================================================
+ * HEURISTIC DEMO FALLBACKS FOR OFFLINE / ZERO-CONFIG ENVIRONMENTS
+ * ========================================================================= */
+
+export function generateDemoInterviewQuestions(
+  params: GenerateInterviewQuestionsParams
+): InterviewQuestion[] {
+  const roleLower = params.role.toLowerCase();
+  const count = params.questionCount || 5;
+
+  let baseBank: InterviewQuestion[] = [];
+
+  if (roleLower.includes("frontend") || roleLower.includes("react") || roleLower.includes("next")) {
+    baseBank = [
+      {
+        id: "demo_fe_1",
+        question:
+          "Explain how Next.js App Router Server Components differ from Client Components. When should you push state down to the client boundary?",
+        category: "technical",
+        expectedKeywords: ["RSC", "Zero Bundle Size", "Interactivity", "Serialization", "Streaming SSR"],
+        context: "Evaluating understanding of modern React 19 / Next.js architectural boundaries and client hydration overhead.",
+        hint: "Focus on bundle size impact, sensitive data access on the server, and where event listeners (onClick, useState) must reside.",
+        sampleAnswer:
+          "Server Components render strictly on the server without shipping JavaScript to the client, reducing bundle size and enabling direct database access. Client components are designated with 'use client' and handle user interactivity, state hooks, and browser APIs. Best practice is to push the client boundary as deep down the component tree as possible (leaf nodes) to preserve server rendering benefits.",
+      },
+      {
+        id: "demo_fe_2",
+        question:
+          "How do you profile and optimize Core Web Vitals (LCP, CLS, INP) in a large-scale React application?",
+        category: "technical",
+        expectedKeywords: ["LCP", "INP", "CLS", "Image Optimization", "Code Splitting", "Web Workers"],
+        context: "Crucial for assessing production web performance and SEO optimization skills.",
+        hint: "Mention dynamic imports, next/image priority loading, font display swap, and breaking up long JavaScript main-thread tasks.",
+        sampleAnswer:
+          "For LCP, prioritize hero asset delivery using next/image with priority, preload critical fonts, and minimize server TTFB. For CLS, specify explicit aspect ratios on containers and avoid unsized dynamic DOM injection. For INP, break long main-thread tasks with requestIdleCallback, debounce input handlers, and offload CPU-heavy processing to Web Workers.",
+      },
+      {
+        id: "demo_fe_3",
+        question:
+          "Describe a time when you had a technical disagreement with a backend engineer regarding API payload design. How did you resolve it?",
+        category: "behavioral",
+        expectedKeywords: ["STAR Framework", "Contract Testing", "BFF Pattern", "Collaboration", "Customer Impact"],
+        context: "Testing cross-functional leadership, pragmatic communication, and conflict resolution under deadlines.",
+        hint: "Structure your response using Situation, Task, Action, Result (STAR).",
+        sampleAnswer:
+          "In my previous team (Situation), backend wanted a monolithic payload with 40+ nested fields while mobile/web needed fast 50ms responses (Task). I proposed an RFC with benchmarks showing mobile payload bloat (Action) and introduced a Backend-For-Frontend (BFF) layer with GraphQL. Result: API latency dropped by 38% and both frontend and backend velocity improved without breaking legacy services.",
+      },
+      {
+        id: "demo_fe_4",
+        question:
+          "How would you design an infinite scrolling virtualization feed (like Twitter or LinkedIn) handling 10,000+ dynamic height items without frame drops?",
+        category: "system-design",
+        expectedKeywords: ["Virtualization", "DOM recycling", "IntersectionObserver", "Dynamic Height caching", "Windowing"],
+        context: "Assessing frontend system design, memory management, and smooth 60fps rendering.",
+        hint: "Discuss maintaining scroll offset, overscan windows, and estimated height caches with ResizeObserver.",
+        sampleAnswer:
+          "I would implement a windowed virtual list maintaining only items within the viewport plus an overscan buffer of ~5 items above and below. For dynamic heights, store measured heights in a Map indexed by item ID using ResizeObserver, recalculating total scroll container height dynamically and using transform: translateY for GPU-accelerated item positioning.",
+      },
+      {
+        id: "demo_fe_5",
+        question:
+          "Tell me about a high-severity production bug you introduced or fixed. What was the root cause and post-mortem action item?",
+        category: "situational",
+        expectedKeywords: ["Root Cause Analysis", "Observability", "Rollback", "Post-Mortem", "Automated E2E tests"],
+        context: "Evaluating candidate maturity, incident response, and continuous quality improvement.",
+        hint: "Emphasize transparency, blameless post-mortem culture, and preventative CI/CD guardrails.",
+        sampleAnswer:
+          "During a checkout migration, a race condition in authentication token refresh caused 401 errors for 2% of active users. We immediately rolled back the canary deployment within 4 minutes via automated health metrics. In the blameless post-mortem, we added a token mutex queue and incorporated multi-tab token synchronization integration tests in CI.",
+      },
+    ];
+  } else {
+    // General Full-Stack / Backend / System Design bank
+    baseBank = [
+      {
+        id: "demo_gen_1",
+        question:
+          `As a ${params.difficulty} ${params.role}, how do you ensure high database concurrency and prevent race conditions in financial or inventory transactions?`,
+        category: "technical",
+        expectedKeywords: ["ACID", "Optimistic Locking", "Pessimistic Locking", "Isolation Levels", "Idempotency"],
+        context: "Tests fundamental understanding of relational transactions, distributed safety, and concurrency models.",
+        hint: "Discuss database isolation levels (SERIALIZABLE vs REPEATABLE READ), SELECT FOR UPDATE, and version columns.",
+        sampleAnswer:
+          "To prevent race conditions like double-spending or overselling, I utilize database transactions with appropriate isolation levels, combined with Optimistic Locking (version columns) for high-read scenarios or Pessimistic Locking (SELECT ... FOR UPDATE) for high-contention paths. Additionally, every transaction API endpoint enforces idempotency keys stored in Redis.",
+      },
+      {
+        id: "demo_gen_2",
+        question:
+          "Walk me through how you architect a resilient background job processing system with retry backoff, dead-letter queues, and rate-limiting.",
+        category: "system-design",
+        expectedKeywords: ["BullMQ / Redis", "DLQ", "Exponential Backoff with Jitter", "Idempotency", "Circuit Breaker"],
+        context: "Evaluating distributed systems capability, failure modes, and asynchronous messaging architecture.",
+        hint: "Cover queue partitions, worker scalability, exponential backoff with jitter to avoid thundering herd, and poison pill handling.",
+        sampleAnswer:
+          "I structure the system with a distributed queue (e.g. Redis BullMQ or AWS SQS) backed by independent worker pools. Tasks have deterministic idempotency IDs. For transient errors, retries use exponential backoff with randomized jitter. If retries exceed 5 attempts, messages route to a Dead Letter Queue (DLQ) with alert triggers and administrative replay tooling.",
+      },
+      {
+        id: "demo_gen_3",
+        question:
+          "Describe a situation where you had to lead a critical project with ambiguous requirements and tight deadlines. What was your process?",
+        category: "behavioral",
+        expectedKeywords: ["STAR Framework", "Scope Negotiation", "Milestones", "De-risking", "Stakeholder Alignment"],
+        context: "Assessing ownership, ambiguity management, and delivery discipline.",
+        hint: "Structure using STAR: Situation, Task, Action, Result.",
+        sampleAnswer:
+          "When our team was tasked with launching a compliance export tool in 3 weeks with shifting legal requirements, I drove an alignment sync to separate MVP must-haves from fast-follow enhancements. I established weekly demo milestones, de-risked the data pipeline first, and successfully shipped 2 days ahead of deadline with zero compliance infractions.",
+      },
+      {
+        id: "demo_gen_4",
+        question:
+          "How do you design a distributed caching layer to protect your primary database from cache stampede (thundering herd) during peak traffic spikes?",
+        category: "system-design",
+        expectedKeywords: ["XFetch", "Probabilistic Expiration", "Mutex Locking", "Cache Warmup", "Redis Cluster"],
+        context: "Deep dive into caching strategies, cache invalidation, and database protection.",
+        hint: "Mention distributed mutex locks (Redlock), probabilistic early recomputation (XFetch), and stale-while-revalidate.",
+        sampleAnswer:
+          "To prevent cache stampede when high-traffic keys expire, I implement probabilistic early expiration (XFetch algorithm) where workers asynchronously refresh the cache before strict TTL expiry. For absolute misses, workers acquire a short-lived distributed mutex on Redis so only one worker queries the database while others wait or serve stale cached data.",
+      },
+      {
+        id: "demo_gen_5",
+        question:
+          "Tell me about a time you mentored a junior engineer or championed engineering standards across your team.",
+        category: "behavioral",
+        expectedKeywords: ["Code Reviews", "Pair Programming", "RFC Process", "Growth Mindset", "Knowledge Sharing"],
+        context: "Testing engineering leadership, culture cultivation, and team uplift.",
+        hint: "Highlight patience, constructive feedback loops, and sustainable documentation.",
+        sampleAnswer:
+          "I mentored an associate engineer who was struggling with complex TypeScript generics and async patterns. I initiated weekly 1:1 pair programming sessions, guided them through creating their first RFC, and helped them break large PRs into reviewable chunks. Within six months, they autonomously delivered our core payment webhook integration and were promoted.",
+      },
+    ];
+  }
+
+  return baseBank.slice(0, count);
+}
+
+export function generateDemoAnswerEvaluation(
+  params: EvaluateInterviewAnswerParams
+): InterviewAnswerEvaluation {
+  const answer = params.userAnswer.trim();
+  const wordCount = answer.split(/\s+/).length;
+  const lowerAnswer = answer.toLowerCase();
+
+  const matchedKeywords = params.question.expectedKeywords.filter((kw) =>
+    lowerAnswer.includes(kw.toLowerCase())
+  );
+
+  let score = 65;
+  if (wordCount >= 40) score += 10;
+  if (wordCount >= 80) score += 8;
+  if (matchedKeywords.length >= 2) score += 10;
+  if (matchedKeywords.length >= 4) score += 5;
+  if (lowerAnswer.includes("because") || lowerAnswer.includes("for example") || lowerAnswer.includes("trade-off")) {
+    score += 5;
+  }
+  score = Math.min(Math.max(score, 50), 96);
+
+  const strengths: string[] = [];
+  if (matchedKeywords.length > 0) {
+    strengths.push(`Directly referenced key concepts: ${matchedKeywords.join(", ")}.`);
+  } else {
+    strengths.push("Provided a coherent initial perspective on the problem.");
+  }
+  if (wordCount > 50) {
+    strengths.push("Good descriptive depth and willingness to elaborate on implementation details.");
+  } else {
+    strengths.push("Concise and to the point.");
+  }
+
+  const weaknesses: string[] = [];
+  const missingKeywords = params.question.expectedKeywords.filter(
+    (kw) => !lowerAnswer.includes(kw.toLowerCase())
+  );
+  if (missingKeywords.length > 0) {
+    weaknesses.push(
+      `Could have strengthened the response by incorporating: ${missingKeywords.slice(0, 3).join(", ")}.`
+    );
+  }
+  if (!lowerAnswer.includes("%") && !lowerAnswer.includes("ms") && !lowerAnswer.includes("metric")) {
+    weaknesses.push(
+      "Add quantifiable business or performance metrics (e.g. latency cut by X%, scale of Y users) to demonstrate real-world impact."
+    );
+  }
+
+  return {
+    questionId: params.question.id,
+    question: params.question.question,
+    userAnswer: params.userAnswer,
+    score,
+    strengths,
+    weaknesses,
+    idealAnswer:
+      params.question.sampleAnswer ||
+      "A top-tier answer addresses the core mechanism, explicitly discusses operational trade-offs, and provides quantifiable outcomes.",
+    starCompliance:
+      params.question.category === "behavioral" || params.question.category === "situational"
+        ? {
+            situation: "Context established",
+            task: "Clear objective defined",
+            action: "Specific architectural or personal action taken",
+            result: "Quantifiable outcome highlighted",
+            score: Math.min(score + 4, 98),
+          }
+        : undefined,
+    isDemo: true,
+  };
+}
+
+export function generateDemoInterviewReport(
+  params: GenerateInterviewReportParams
+): InterviewFinalReport {
+  const evaluations = params.evaluations;
+  const avgScore =
+    evaluations.length > 0
+      ? Math.round(
+          evaluations.reduce((acc, curr) => acc + curr.score, 0) / evaluations.length
+        )
+      : 78;
+
+  let grade: InterviewFinalReport["grade"] = "Senior Hire";
+  if (avgScore >= 90) grade = "Staff / Principal Ready";
+  else if (avgScore >= 78) grade = "Senior Hire";
+  else if (avgScore >= 65) grade = "Mid-Level Hire";
+  else grade = "Borderline / Needs Practice";
+
+  const questionBreakdowns = evaluations.map((ev) => ({
+    questionId: ev.questionId,
+    question: ev.question,
+    userAnswer: ev.userAnswer,
+    score: ev.score,
+    feedback: ev.weaknesses.join(". ") || "Well articulated response.",
+    betterAlternative: ev.idealAnswer,
+  }));
+
+  return {
+    overallScore: avgScore,
+    grade,
+    categoryScores: {
+      technicalProficiency: Math.min(Math.round(avgScore * 1.02), 98),
+      communicationClarity: Math.min(Math.round(avgScore * 0.98), 95),
+      problemSolving: Math.min(Math.round(avgScore * 0.95), 96),
+      cultureAndSTAR: Math.min(Math.round(avgScore * 1.01), 97),
+    },
+    keyStrengths: [
+      "Clear technical communication and structured problem decomposition",
+      "Demonstrated familiarity with industry best practices and core architectural patterns",
+      "Proactive consideration of edge cases and user impact",
+    ],
+    criticalImprovements: [
+      "Incorporate more quantified metrics ($ saved, % latency improvement) into STAR behavioral responses",
+      "Elaborate further on distributed failure modes and automated fallback mechanisms",
+      "Discuss alternative architectural trade-offs before settling on a single solution",
+    ],
+    detailedFeedback: `The candidate completed a comprehensive mock interview evaluation for the ${params.role} (${params.difficulty} level) track. Overall performance is calibrated at ${grade} tier. Across all questions, the candidate articulated coherent logic and demonstrated strong command of engineering fundamentals. Focusing on deeper trade-off comparisons and metric quantification will elevate interview performance to top-tier percentile.`,
+    readinessRecommendation:
+      avgScore >= 75
+        ? `Ready for Tier-1 onsite technical rounds. Fine-tune system design trade-off storytelling to maximize Staff/Lead level offers.`
+        : `Recommended to practice 2-3 additional mock sessions with emphasis on the STAR framework and concrete technical benchmarks.`,
+    questionBreakdowns,
+    completedAt: new Date().toISOString(),
     isDemo: true,
   };
 }

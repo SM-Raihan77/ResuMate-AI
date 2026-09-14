@@ -54,41 +54,41 @@ export default function BreakdownCards({ breakdown }: BreakdownCardsProps) {
         return (
           <div
             key={idx}
-            className="group rounded-2xl bg-[#121316] border border-white/[0.08] hover:border-[#FFE600]/40 p-6 transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.6)] flex flex-col justify-between"
+            className="group rounded-2xl bg-neutral-900/80 border border-neutral-800 hover:border-neutral-700 p-6 transition-all duration-200 shadow-xl flex flex-col justify-between backdrop-blur-xl"
           >
             <div>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#1a1b20] border border-white/[0.08] group-hover:border-[#FFE600]/50 flex items-center justify-center text-[#FFE600] transition-colors">
-                    <Icon className="w-5 h-5 stroke-[2.2]" />
+                  <div className="w-9 h-9 rounded-xl bg-neutral-800 border border-neutral-700 flex items-center justify-center text-[#FFE600] transition-colors">
+                    <Icon className="w-4 h-4 stroke-[2]" />
                   </div>
-                  <h4 className="text-base font-bold text-white group-hover:text-[#FFE600] transition-colors">
+                  <h4 className="text-sm font-bold text-white group-hover:text-[#FFE600] transition-colors">
                     {cat.title}
                   </h4>
                 </div>
 
                 <div className="text-right">
-                  <span className={`text-2xl font-black font-mono ${textColor}`}>
+                  <span className={`text-xl font-extrabold font-mono ${textColor}`}>
                     {cat.score}%
                   </span>
                 </div>
               </div>
 
-              <div className="w-full bg-white/[0.06] rounded-full h-2.5 overflow-hidden mb-4">
+              <div className="w-full bg-neutral-950 rounded-full h-2 overflow-hidden mb-4 border border-neutral-800/80">
                 <div
                   className={`h-full rounded-full transition-all duration-1000 ease-out ${barColor}`}
                   style={{ width: `${Math.min(Math.max(cat.score, 5), 100)}%` }}
                 />
               </div>
 
-              <p className="text-xs text-gray-400 leading-relaxed mb-4">
+              <p className="text-xs text-neutral-400 leading-relaxed mb-4">
                 {cat.description}
               </p>
             </div>
 
-            <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-gray-400">
+            <div className="pt-3 border-t border-neutral-800 flex items-center justify-between text-[11px] text-neutral-400">
               <span>Target Standard:</span>
-              <span className="font-semibold text-gray-300">{cat.benchmark}</span>
+              <span className="font-semibold text-neutral-300">{cat.benchmark}</span>
             </div>
           </div>
         );

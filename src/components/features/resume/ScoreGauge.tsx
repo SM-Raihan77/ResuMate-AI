@@ -60,7 +60,7 @@ export default function ScoreGauge({
         color: "text-[#FFE600]",
         stroke: "#FFE600",
         bg: "bg-[#FFE600]/10",
-        border: "border-[#FFE600]/30",
+        border: "border-[#FFE600]/25",
         label: "Exceptional Match",
         icon: Award,
       };
@@ -71,7 +71,7 @@ export default function ScoreGauge({
         color: "text-emerald-400",
         stroke: "#34D399",
         bg: "bg-emerald-500/10",
-        border: "border-emerald-500/30",
+        border: "border-emerald-500/20",
         label: "Good ATS Compatibility",
         icon: ShieldCheck,
       };
@@ -82,7 +82,7 @@ export default function ScoreGauge({
         color: "text-amber-400",
         stroke: "#FBBF24",
         bg: "bg-amber-500/10",
-        border: "border-amber-500/30",
+        border: "border-amber-500/20",
         label: "Moderate Gaps",
         icon: TrendingUp,
       };
@@ -92,7 +92,7 @@ export default function ScoreGauge({
       color: "text-rose-400",
       stroke: "#F87171",
       bg: "bg-rose-500/10",
-      border: "border-rose-500/30",
+      border: "border-rose-500/20",
       label: "Needs Revision",
       icon: AlertTriangle,
     };
@@ -106,11 +106,9 @@ export default function ScoreGauge({
   const strokeDashoffset = circumference - (animatedScore / 100) * circumference;
 
   return (
-    <div className="relative rounded-3xl bg-[#121316] border border-white/[0.08] p-6 lg:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.8)] overflow-hidden">
-      <div className="absolute top-0 right-0 w-80 h-80 bg-[#FFE600]/5 rounded-full blur-3xl pointer-events-none" />
-
+    <div className="relative rounded-2xl bg-neutral-900/80 border border-neutral-800 p-6 lg:p-8 shadow-xl overflow-hidden backdrop-blur-xl">
       {isDemo && (
-        <div className="mb-4 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFE600]/15 border border-[#FFE600]/40 text-[#FFE600] text-xs font-semibold">
+        <div className="mb-4 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFE600]/10 border border-[#FFE600]/25 text-[#FFE600] text-xs font-semibold">
           <Sparkles className="w-3.5 h-3.5" />
           <span>Demo Analysis Mode</span>
         </div>
@@ -118,8 +116,8 @@ export default function ScoreGauge({
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
         <div className="lg:col-span-4 flex flex-col items-center justify-center text-center">
-          <div className="relative w-44 h-44 flex items-center justify-center">
-            <svg className="w-44 h-44 -rotate-90" viewBox="0 0 160 160">
+          <div className="relative w-40 h-40 flex items-center justify-center">
+            <svg className="w-40 h-40 -rotate-90" viewBox="0 0 160 160">
               <circle
                 cx="80"
                 cy="80"
@@ -145,16 +143,16 @@ export default function ScoreGauge({
             </svg>
 
             <div className="absolute flex flex-col items-center justify-center">
-              <span className="text-4xl lg:text-5xl font-black text-white tracking-tight font-mono">
+              <span className="text-4xl font-extrabold text-white tracking-tight font-mono">
                 {animatedScore}
               </span>
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+              <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">
                 out of 100
               </span>
             </div>
           </div>
 
-          <div className={`mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full ${details.bg} ${details.border} border ${details.color} text-xs font-bold`}>
+          <div className={`mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full ${details.bg} ${details.border} border ${details.color} text-xs font-semibold`}>
             <IconComponent className="w-3.5 h-3.5" />
             <span>{details.label}</span>
           </div>
@@ -162,29 +160,29 @@ export default function ScoreGauge({
 
         <div className="lg:col-span-8 space-y-4">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="px-3 py-1 rounded-lg bg-white/[0.04] border border-white/[0.08] text-xs font-semibold text-gray-300">
+            <span className="px-3 py-1 rounded-lg bg-neutral-950 border border-neutral-800 text-xs font-medium text-neutral-300">
               🎯 {targetRole || "Target Role Identified"}
             </span>
             {experienceLevel && (
-              <span className="px-3 py-1 rounded-lg bg-white/[0.04] border border-white/[0.08] text-xs font-semibold text-gray-300">
+              <span className="px-3 py-1 rounded-lg bg-neutral-950 border border-neutral-800 text-xs font-medium text-neutral-300">
                 💼 {experienceLevel}
               </span>
             )}
-            <span className="px-3 py-1 rounded-lg bg-[#FFE600]/10 border border-[#FFE600]/30 text-xs font-bold text-[#FFE600]">
+            <span className="px-3 py-1 rounded-lg bg-[#FFE600]/10 border border-[#FFE600]/25 text-xs font-semibold text-[#FFE600]">
               {details.tier}
             </span>
           </div>
 
-          <div className="space-y-2">
-            <h3 className="text-xl lg:text-2xl font-black text-white tracking-tight">
+          <div className="space-y-1.5">
+            <h3 className="text-xl font-bold text-white tracking-tight">
               Executive AI Audit Summary
             </h3>
-            <p className="text-gray-300 text-sm lg:text-base leading-relaxed">
+            <p className="text-neutral-300 text-sm leading-relaxed">
               {overallFeedback}
             </p>
           </div>
 
-          <div className="pt-2 flex flex-wrap items-center gap-4 text-xs text-gray-400">
+          <div className="pt-2 flex flex-wrap items-center gap-4 text-xs text-neutral-400">
             <div className="flex items-center gap-1.5">
               <div className="w-2 h-2 rounded-full bg-emerald-400" />
               <span>Greenhouse & Lever ATS Compatible</span>

@@ -6,17 +6,17 @@ import { Bot, Mail, Phone, MapPin } from "lucide-react";
 
 export default function Footer(): React.JSX.Element {
   return (
-    <footer className="bg-[#050608] text-white border-t border-white/[0.08] pt-16 pb-10 relative overflow-hidden">
+    <footer className="bg-[#050608] text-white border-t border-neutral-900 pt-16 pb-10 relative overflow-hidden">
       {/* Subtle ambient glow */}
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[500px] h-[150px] bg-[#FFE600]/4 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[450px] h-[120px] bg-[#FFE600]/2 rounded-full blur-[140px] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Main Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 pb-12 border-b border-white/[0.08]">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 pb-12 border-b border-neutral-900">
           {/* Brand Info */}
           <div className="lg:col-span-4 space-y-4">
             <Link href="/" className="flex items-center gap-2.5 group shrink-0">
-              <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-[#FFE600] text-black shadow-[0_0_15px_rgba(255,230,0,0.3)]">
+              <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-[#FFE600] text-black shadow-sm">
                 <Bot className="w-4 h-4 stroke-[2.5]" />
               </div>
               <span className="font-extrabold text-xl tracking-tight text-white">
@@ -24,16 +24,16 @@ export default function Footer(): React.JSX.Element {
               </span>
             </Link>
 
-            <p className="text-gray-400 text-xs sm:text-sm leading-relaxed max-w-sm">
+            <p className="text-neutral-400 text-xs sm:text-sm leading-relaxed max-w-sm">
               Your AI-powered career growth partner. Resume analysis, job recommendations, interview prep, and personalized learning roadmaps.
             </p>
 
             {/* Social Icons */}
-            <div className="flex items-center gap-3 pt-2">
+            <div className="flex items-center gap-2.5 pt-1">
               <Link
                 href="https://twitter.com"
                 target="_blank"
-                className="w-8 h-8 rounded-lg bg-[#121316] border border-white/[0.08] flex items-center justify-center text-gray-400 hover:text-[#FFE600] hover:border-[#FFE600]/40 transition-colors"
+                className="w-8 h-8 rounded-lg bg-neutral-900 border border-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white hover:border-neutral-700 transition-colors"
                 aria-label="Twitter / X"
               >
                 <svg className="w-3.5 h-3.5 fill-currentColor" viewBox="0 0 24 24">
@@ -43,7 +43,7 @@ export default function Footer(): React.JSX.Element {
               <Link
                 href="https://linkedin.com"
                 target="_blank"
-                className="w-8 h-8 rounded-lg bg-[#121316] border border-white/[0.08] flex items-center justify-center text-gray-400 hover:text-[#FFE600] hover:border-[#FFE600]/40 transition-colors"
+                className="w-8 h-8 rounded-lg bg-neutral-900 border border-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white hover:border-neutral-700 transition-colors"
                 aria-label="LinkedIn"
               >
                 <svg className="w-3.5 h-3.5 fill-currentColor" viewBox="0 0 24 24">
@@ -53,7 +53,7 @@ export default function Footer(): React.JSX.Element {
               <Link
                 href="https://github.com"
                 target="_blank"
-                className="w-8 h-8 rounded-lg bg-[#121316] border border-white/[0.08] flex items-center justify-center text-gray-400 hover:text-[#FFE600] hover:border-[#FFE600]/40 transition-colors"
+                className="w-8 h-8 rounded-lg bg-neutral-900 border border-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white hover:border-neutral-700 transition-colors"
                 aria-label="GitHub"
               >
                 <svg className="w-3.5 h-3.5 fill-currentColor" viewBox="0 0 24 24">
@@ -70,29 +70,29 @@ export default function Footer(): React.JSX.Element {
           {/* Services Links */}
           <div className="lg:col-span-3 space-y-3">
             <h4 className="text-sm font-bold text-white">Services</h4>
-            <ul className="space-y-2 text-xs sm:text-sm text-gray-400">
+            <ul className="space-y-2 text-xs sm:text-sm text-neutral-400">
               <li>
-                <Link href="/#features" className="hover:text-[#FFE600] transition-colors">
+                <Link href="/#features" className="hover:text-white transition-colors">
                   Features
                 </Link>
               </li>
               <li>
-                <Link href="/resume-analyzer" className="hover:text-[#FFE600] transition-colors">
+                <Link href="/resume-analyzer" className="hover:text-white transition-colors">
                   Resume ATS Analysis
                 </Link>
               </li>
               <li>
-                <Link href="/#tools" className="hover:text-[#FFE600] transition-colors">
+                <Link href="/#tools" className="hover:text-white transition-colors">
                   Career Chatbot
                 </Link>
               </li>
               <li>
-                <Link href="/#tools" className="hover:text-[#FFE600] transition-colors">
+                <Link href="/#tools" className="hover:text-white transition-colors">
                   Learning Roadmaps
                 </Link>
               </li>
               <li>
-                <Link href="#" className="hover:text-[#FFE600] transition-colors">
+                <Link href="#" className="hover:text-white transition-colors">
                   Blog & Resources
                 </Link>
               </li>
@@ -102,24 +102,24 @@ export default function Footer(): React.JSX.Element {
           {/* Company Links */}
           <div className="lg:col-span-2 space-y-3">
             <h4 className="text-sm font-bold text-white">Company</h4>
-            <ul className="space-y-2 text-xs sm:text-sm text-gray-400">
+            <ul className="space-y-2 text-xs sm:text-sm text-neutral-400">
               <li>
-                <Link href="#" className="hover:text-[#FFE600] transition-colors">
+                <Link href="#" className="hover:text-white transition-colors">
                   About Us
                 </Link>
               </li>
               <li>
-                <Link href="/#cta" className="hover:text-[#FFE600] transition-colors">
+                <Link href="/#cta" className="hover:text-white transition-colors">
                   Contact
                 </Link>
               </li>
               <li>
-                <Link href="#" className="hover:text-[#FFE600] transition-colors">
+                <Link href="#" className="hover:text-white transition-colors">
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link href="#" className="hover:text-[#FFE600] transition-colors">
+                <Link href="#" className="hover:text-white transition-colors">
                   Terms of Service
                 </Link>
               </li>
@@ -129,7 +129,7 @@ export default function Footer(): React.JSX.Element {
           {/* Contact Details */}
           <div className="lg:col-span-3 space-y-3">
             <h4 className="text-sm font-bold text-white">Contact</h4>
-            <ul className="space-y-2.5 text-xs sm:text-sm text-gray-400">
+            <ul className="space-y-2.5 text-xs sm:text-sm text-neutral-400">
               <li className="flex items-center gap-2.5">
                 <Mail className="w-4 h-4 text-[#FFE600] shrink-0" />
                 <span className="truncate">support@resumate.ai</span>
@@ -147,7 +147,7 @@ export default function Footer(): React.JSX.Element {
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-6 flex items-center justify-center text-xs text-gray-500">
+        <div className="pt-6 flex items-center justify-center text-xs text-neutral-500">
           <p>© {new Date().getFullYear()} ResuMate AI. All Rights Reserved.</p>
         </div>
       </div>

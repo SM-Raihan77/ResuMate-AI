@@ -15,24 +15,24 @@ export default function CTASection(): React.JSX.Element {
   };
 
   return (
-    <section id="cta" className="py-20 lg:py-28 bg-[#08090C] text-white relative overflow-hidden border-t border-white/[0.04]">
+    <section id="cta" className="py-20 lg:py-24 bg-[#08090C] text-white relative overflow-hidden border-t border-neutral-900">
       {/* Background ambient lighting */}
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[650px] bg-[#FFE600]/8 rounded-full blur-[200px] pointer-events-none" />
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] bg-[#FFE600]/4 rounded-full blur-[180px] pointer-events-none" />
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-20">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-16">
         {/* Block 1: Main CTA */}
         <div className="space-y-6">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[#FFE600]">
-            Start Building Your Dream Career Today
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white">
+            Start Building Your <span className="text-[#FFE600]">Dream Career</span> Today
           </h2>
-          <p className="text-gray-300 text-sm sm:text-base lg:text-lg leading-relaxed max-w-xl mx-auto">
+          <p className="text-neutral-400 text-sm sm:text-base leading-relaxed max-w-xl mx-auto">
             Join thousands of professionals using AI to accelerate their careers. Free to start.
           </p>
 
           <div className="pt-2">
             <Link
               href="/register"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#FFE600] hover:bg-[#FFD000] text-black font-extrabold rounded-xl shadow-[0_0_30px_rgba(255,230,0,0.35)] hover:shadow-[0_0_40px_rgba(255,230,0,0.55)] transition-all hover:scale-[1.02] active:scale-[0.98] text-base"
+              className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-[#FFE600] hover:bg-[#FFD000] text-black font-bold rounded-xl shadow-[0_0_25px_rgba(255,230,0,0.25)] hover:shadow-[0_0_35px_rgba(255,230,0,0.4)] transition-all active:scale-[0.98] text-sm sm:text-base cursor-pointer"
             >
               <span>Create Free Account</span>
               <ArrowRight className="w-4 h-4 stroke-[2.5]" />
@@ -41,35 +41,35 @@ export default function CTASection(): React.JSX.Element {
         </div>
 
         {/* Block 2: Newsletter */}
-        <div id="newsletter" className="space-y-6 pt-10 border-t border-white/[0.08] max-w-2xl mx-auto">
-          <div className="space-y-2">
-            <h3 className="text-2xl sm:text-3xl font-black tracking-tight text-[#FFE600]">
+        <div id="newsletter" className="space-y-5 pt-10 border-t border-neutral-800 max-w-xl mx-auto">
+          <div className="space-y-1.5">
+            <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
               Stay Ahead in Your Career
             </h3>
-            <p className="text-gray-400 text-xs sm:text-sm leading-relaxed">
+            <p className="text-neutral-400 text-xs sm:text-sm leading-relaxed">
               Get weekly AI career tips, job market insights, and curated resources.
             </p>
           </div>
 
           {!isSubscribed ? (
-            <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto">
+            <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row items-center justify-center gap-2.5 max-w-md mx-auto">
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email..."
                 required
-                className="w-full px-4 py-3 rounded-xl bg-[#121316] border border-white/[0.12] text-white placeholder-gray-500 focus:outline-none focus:border-[#FFE600] text-sm transition-colors"
+                className="w-full px-4 py-2.5 rounded-xl bg-neutral-900 border border-neutral-800 text-white placeholder-neutral-500 focus:outline-none focus:border-[#FFE600] text-xs sm:text-sm transition-colors"
               />
               <button
                 type="submit"
-                className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#FFE600] hover:bg-[#FFD000] text-black font-bold text-sm transition-all shrink-0 cursor-pointer shadow-md"
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#FFE600] hover:bg-[#FFD000] text-black font-semibold text-xs sm:text-sm transition-all shrink-0 cursor-pointer shadow-sm active:scale-95"
               >
                 Subscribe
               </button>
             </form>
           ) : (
-            <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center gap-2 text-sm max-w-md mx-auto animate-in fade-in">
+            <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center gap-2 text-xs sm:text-sm max-w-md mx-auto animate-in fade-in">
               <CheckCircle2 className="w-4 h-4" />
               <span>You are subscribed! Thank you.</span>
             </div>

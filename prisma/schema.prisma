@@ -13,18 +13,85 @@ datasource db {
 }
 
 model User {
-  id            String    @id
-  name          String
-  email         String
-  emailVerified Boolean   @default(false)
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  sessions      Session[]
-  accounts      Account[]
+  id                String             @id
+  name              String
+  email             String
+  emailVerified     Boolean            @default(false)
+  image             String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  sessions          Session[]
+  accounts          Account[]
+  resumes           Resume[]
+  analyses          ResumeAnalysis[]
+  interviewSessions InterviewSession[]
 
   @@unique([email])
   @@map("user")
+}
+
+model Resume {
+  id                String             @id @default(cuid())
+  userId            String
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title             String?            @default("Untitled Resume")
+  description       String?
+  fullName          String?
+  firstName         String?
+  lastName          String?
+  jobTitle          String?
+  email             String?
+  phone             String?
+  location          String?
+  city              String?
+  country           String?
+  website           String?
+  linkedin          String?
+  github            String?
+  photoUrl          String?
+  summary           String?
+  experience        Json?              @default("[]")
+  education         Json?              @default("[]")
+  skills            Json?              @default("[]")
+  projects          Json?              @default("[]")
+  certifications    Json?              @default("[]")
+  customSections    Json?              @default("[]")
+  template          String?            @default("modern")
+  accentColor       String?            @default("#FFE600")
+  fontFamily        String?            @default("sans")
+  spacing           String?            @default("normal")
+  colorHex          String?            @default("#FFE600")
+  borderStyle       String?            @default("squircle")
+  atsScore          Int?               @default(80)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  analyses          ResumeAnalysis[]
+  interviewSessions InterviewSession[]
+
+  @@index([userId])
+  @@map("resume")
+}
+
+model ResumeAnalysis {
+  id                      String   @id @default(cuid())
+  userId                  String?
+  user                    User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resumeId                String
+  resume                  Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  atsScore                Int
+  scoreBreakdown          Json
+  missingKeywords         String[]
+  matchedKeywords         String[]
+  formattingIssues        String[]
+  bulletPointRewrites     Json
+  overallFeedback         String?
+  targetRoleIdentified    String?
+  detectedExperienceLevel String?
+  createdAt               DateTime @default(now())
+
+  @@index([userId])
+  @@index([resumeId])
+  @@map("resume_analysis")
 }
 
 model Session {
@@ -76,3 +143,62 @@ model Verification {
   @@index([identifier])
   @@map("verification")
 }
+
+enum InterviewStatus {
+  IN_PROGRESS
+  COMPLETED
+  ABANDONED
+}
+
+model InterviewSession {
+  id                      String              @id @default(cuid())
+  userId                  String
+  user                    User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resumeId                String?
+  resume                  Resume?             @relation(fields: [resumeId], references: [id], onDelete: SetNull)
+  role                    String
+  difficulty              String              @default("senior")
+  interviewType           String              @default("mixed")
+  status                  InterviewStatus     @default(IN_PROGRESS)
+  totalQuestions          Int                 @default(5)
+  jobDescription          String?
+  overallScore            Int?
+  grade                   String?
+  categoryScores          Json?
+  keyStrengths            String[]            @default([])
+  criticalImprovements    String[]            @default([])
+  detailedFeedback        String?
+  readinessRecommendation String?
+  questions               InterviewQuestion[]
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
+
+  @@index([userId])
+  @@index([resumeId])
+  @@map("interview_session")
+}
+
+model InterviewQuestion {
+  id               String           @id @default(cuid())
+  sessionId        String
+  session          InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  questionIndex    Int              @default(0)
+  question         String
+  category         String           @default("technical")
+  expectedKeywords String[]         @default([])
+  context          String?
+  hint             String?
+  sampleAnswer     String?
+  userAnswer       String?
+  score            Int?
+  strengths        String[]         @default([])
+  weaknesses       String[]         @default([])
+  idealAnswer      String?
+  starCompliance   Json?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@index([sessionId])
+  @@map("interview_question")
+}
+

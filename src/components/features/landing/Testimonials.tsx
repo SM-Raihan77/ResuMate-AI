@@ -29,17 +29,17 @@ const testimonials: TestimonialItem[] = [
 
 export default function Testimonials(): React.JSX.Element {
   return (
-    <section id="testimonials" className="py-20 lg:py-28 bg-[#08090C] text-white relative overflow-hidden border-t border-white/[0.04]">
+    <section id="testimonials" className="py-20 lg:py-24 bg-[#08090C] text-white relative overflow-hidden border-t border-neutral-900">
       {/* Ambient background glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#FFE600]/4 rounded-full blur-[190px] pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#FFE600]/2 rounded-full blur-[180px] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[#FFE600]">
-            Loved by Job Seekers
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white">
+            Loved by <span className="text-[#FFE600]">Job Seekers</span>
           </h2>
-          <p className="text-gray-300 text-sm sm:text-base lg:text-lg leading-relaxed max-w-2xl mx-auto">
+          <p className="text-neutral-400 text-sm sm:text-base leading-relaxed max-w-2xl mx-auto">
             Real success stories from professionals who accelerated their careers.
           </p>
         </div>
@@ -49,28 +49,28 @@ export default function Testimonials(): React.JSX.Element {
           {testimonials.map((item, idx) => (
             <div
               key={idx}
-              className="rounded-2xl bg-[#121316] border border-white/[0.08] hover:border-[#FFE600]/40 p-7 transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between shadow-[0_10px_30px_rgba(0,0,0,0.6)]"
+              className="rounded-2xl bg-neutral-900/60 border border-neutral-800 hover:border-neutral-700 p-7 transition-all duration-200 hover:-translate-y-1 flex flex-col justify-between shadow-lg backdrop-blur-sm"
             >
               <div className="space-y-4">
                 {/* 5 Yellow Stars */}
                 <div className="flex items-center gap-1">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-[#FFE600] text-[#FFE600]" />
+                    <Star key={i} className="w-3.5 h-3.5 fill-[#FFE600] text-[#FFE600]" />
                   ))}
                 </div>
 
                 {/* Quote */}
-                <p className="text-gray-300 text-sm leading-relaxed italic">
+                <p className="text-neutral-300 text-sm leading-relaxed italic">
                   &quot;{item.quote}&quot;
                 </p>
               </div>
 
               {/* Author Info */}
-              <div className="pt-6 mt-6 border-t border-white/[0.06] space-y-0.5">
-                <h4 className="text-sm font-bold text-[#FFE600]">
+              <div className="pt-5 mt-6 border-t border-neutral-800 space-y-0.5">
+                <h4 className="text-sm font-semibold text-white">
                   {item.name}
                 </h4>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-neutral-400">
                   {item.role}
                 </p>
               </div>
