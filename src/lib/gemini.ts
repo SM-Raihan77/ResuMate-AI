@@ -1,5 +1,12 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { ResumeAnalysisResult } from "@/types/analyzer";
+import {
+  InterviewQuestion,
+  InterviewAnswerEvaluation,
+  InterviewFinalReport,
+  InterviewType,
+  InterviewDifficulty,
+} from "@/types/interview";
 
 /**
  * Resolves the Gemini API key from standard environment variable names.
@@ -255,6 +262,496 @@ export function generateDemoAnalysis(
     targetRoleIdentified: lowerJD ? "Target Role (from Job Description)" : "Full Stack Software Engineer",
     detectedExperienceLevel: wordCount > 500 ? "Mid - Senior Level" : "Associate / Mid Level",
     analyzedAt: new Date().toISOString(),
+    isDemo: true,
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Interview AI Functions
+// ═══════════════════════════════════════════════════════════════════════════════
+
+interface GenerateQuestionsParams {
+  role: string;
+  difficulty: string;
+  interviewType: string;
+  questionCount: number;
+  jobDescription?: string;
+  resumeText?: string;
+}
+
+/**
+ * Generates calibrated interview questions using Gemini, or returns demo
+ * questions when no API key is configured.
+ */
+export async function generateInterviewQuestionsWithGemini(
+  params: GenerateQuestionsParams,
+): Promise<{ questions: InterviewQuestion[]; isDemo: boolean }> {
+  const apiKey = getGeminiApiKey();
+
+  if (!apiKey) {
+    console.warn(
+      "No GEMINI_API_KEY found. Falling back to demo interview questions.",
+    );
+    return { questions: generateDemoQuestions(params), isDemo: true };
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
+
+  const systemInstruction = `You are a world-class technical interviewer and talent evaluator.
+Generate exactly ${params.questionCount} interview questions for a "${params.role}" position.
+Difficulty level: ${params.difficulty}. Interview type: ${params.interviewType}.
+Each question must include a category (technical, behavioral, system-design, or situational),
+expected keywords the candidate should mention, optional context/hint, and a sample ideal answer.
+Return strictly valid JSON matching the requested structure.`;
+
+  const prompt = `
+Role: ${params.role}
+Difficulty: ${params.difficulty}
+Interview Type: ${params.interviewType}
+Number of Questions: ${params.questionCount}
+${params.jobDescription ? `\nJob Description:\n"""\n${params.jobDescription.slice(0, 5000)}\n"""` : ""}
+${params.resumeText ? `\nCandidate Resume:\n"""\n${params.resumeText.slice(0, 5000)}\n"""` : ""}
+
+Generate the interview questions now.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+      config: {
+        systemInstruction,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            questions: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  id: { type: Type.STRING },
+                  question: { type: Type.STRING },
+                  category: { type: Type.STRING },
+                  expectedKeywords: {
+                    type: Type.ARRAY,
+                    items: { type: Type.STRING },
+                  },
+                  context: { type: Type.STRING },
+                  hint: { type: Type.STRING },
+                  sampleAnswer: { type: Type.STRING },
+                },
+                required: ["id", "question", "category", "expectedKeywords"],
+              },
+            },
+          },
+          required: ["questions"],
+        },
+      },
+    });
+
+    const parsed = JSON.parse(response.text || "{}");
+    return { questions: parsed.questions ?? [], isDemo: false };
+  } catch (error: any) {
+    console.error("Gemini generateInterviewQuestions error:", error);
+    return { questions: generateDemoQuestions(params), isDemo: true };
+  }
+}
+
+function generateDemoQuestions(
+  params: GenerateQuestionsParams,
+): InterviewQuestion[] {
+  const role = params.role || "Software Engineer";
+  const technicalQs: InterviewQuestion[] = [
+    {
+      id: "demo-q1",
+      question: `Describe how you would design a scalable REST API for a ${role} role. What patterns and technologies would you use?`,
+      category: "technical",
+      expectedKeywords: ["REST", "scalability", "caching", "load balancing", "API gateway"],
+      hint: "Think about request routing, caching layers, and horizontal scaling.",
+      sampleAnswer: "I would design RESTful endpoints following OpenAPI specifications, implement caching with Redis, use an API gateway for rate limiting, and deploy behind a load balancer for horizontal scaling.",
+    },
+    {
+      id: "demo-q2",
+      question: "Explain the difference between SQL and NoSQL databases. When would you choose one over the other?",
+      category: "technical",
+      expectedKeywords: ["relational", "schema", "ACID", "document store", "scalability"],
+      hint: "Consider data structure, consistency requirements, and query patterns.",
+      sampleAnswer: "SQL databases enforce schemas and ACID compliance, ideal for structured relational data. NoSQL databases offer flexible schemas and horizontal scalability, suited for unstructured data or high-throughput scenarios.",
+    },
+  ];
+
+  const behavioralQs: InterviewQuestion[] = [
+    {
+      id: "demo-q3",
+      question: "Tell me about a time you had to resolve a conflict within your team. What was the outcome?",
+      category: "behavioral",
+      expectedKeywords: ["conflict resolution", "communication", "empathy", "outcome", "collaboration"],
+      hint: "Use the STAR method: Situation, Task, Action, Result.",
+      sampleAnswer: "In a previous project, two team members disagreed on the tech stack. I facilitated a structured discussion where each presented pros/cons, and we agreed on a compromise that satisfied both parties and delivered the project on time.",
+    },
+    {
+      id: "demo-q4",
+      question: "Describe a situation where you had to learn a new technology quickly to meet a deadline.",
+      category: "behavioral",
+      expectedKeywords: ["learning", "adaptability", "deadline", "self-study", "delivery"],
+      hint: "Focus on your learning strategy and how you applied the new knowledge.",
+      sampleAnswer: "When our team adopted Kubernetes mid-sprint, I spent evenings studying the documentation, set up a local cluster, and within a week had containerized our main service, meeting our deployment deadline.",
+    },
+  ];
+
+  const systemDesignQs: InterviewQuestion[] = [
+    {
+      id: "demo-q5",
+      question: "How would you design a real-time notification system that handles millions of users?",
+      category: "system-design",
+      expectedKeywords: ["WebSocket", "pub/sub", "message queue", "scalability", "fan-out"],
+      hint: "Consider push vs. pull models, message queuing, and delivery guarantees.",
+      sampleAnswer: "I'd use WebSocket connections for real-time delivery, backed by a pub/sub system like Kafka for fan-out. A message queue ensures delivery guarantees, and connection state is managed via Redis for horizontal scaling.",
+    },
+  ];
+
+  const allQuestions = [...technicalQs, ...behavioralQs, ...systemDesignQs];
+  return allQuestions.slice(0, params.questionCount);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface EvaluateAnswerParams {
+  question: InterviewQuestion;
+  userAnswer: string;
+  role: string;
+  difficulty: string;
+  interviewType: string;
+}
+
+/**
+ * Evaluates a candidate's answer to an interview question using Gemini,
+ * or returns a heuristic demo evaluation when no API key is configured.
+ */
+export async function evaluateInterviewAnswerWithGemini(
+  params: EvaluateAnswerParams,
+): Promise<InterviewAnswerEvaluation> {
+  const apiKey = getGeminiApiKey();
+
+  if (!apiKey) {
+    console.warn("No GEMINI_API_KEY found. Falling back to demo evaluation.");
+    return generateDemoEvaluation(params);
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
+
+  const systemInstruction = `You are a senior technical interview evaluator. Score the candidate's answer from 0 to 100.
+Identify specific strengths and weaknesses. Provide an ideal answer.
+If the question is behavioral, also evaluate STAR compliance (Situation, Task, Action, Result) with a sub-score 0-100.
+Be fair but rigorous. Return strictly valid JSON.`;
+
+  const prompt = `
+Role: ${params.role} | Difficulty: ${params.difficulty} | Type: ${params.interviewType}
+
+Question: "${params.question.question}"
+Category: ${params.question.category}
+Expected keywords: ${params.question.expectedKeywords.join(", ")}
+
+Candidate's Answer:
+"""
+${params.userAnswer.slice(0, 5000)}
+"""
+
+Evaluate this answer now.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+      config: {
+        systemInstruction,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            score: { type: Type.INTEGER },
+            strengths: { type: Type.ARRAY, items: { type: Type.STRING } },
+            weaknesses: { type: Type.ARRAY, items: { type: Type.STRING } },
+            idealAnswer: { type: Type.STRING },
+            starCompliance: {
+              type: Type.OBJECT,
+              properties: {
+                situation: { type: Type.STRING },
+                task: { type: Type.STRING },
+                action: { type: Type.STRING },
+                result: { type: Type.STRING },
+                score: { type: Type.INTEGER },
+              },
+              required: ["situation", "task", "action", "result", "score"],
+            },
+          },
+          required: ["score", "strengths", "weaknesses", "idealAnswer"],
+        },
+      },
+    });
+
+    const parsed = JSON.parse(response.text || "{}");
+    return {
+      questionId: params.question.id,
+      question: params.question.question,
+      userAnswer: params.userAnswer,
+      score: parsed.score ?? 50,
+      strengths: parsed.strengths ?? [],
+      weaknesses: parsed.weaknesses ?? [],
+      idealAnswer: parsed.idealAnswer ?? "",
+      starCompliance: parsed.starCompliance,
+      isDemo: false,
+    };
+  } catch (error: any) {
+    console.error("Gemini evaluateInterviewAnswer error:", error);
+    return generateDemoEvaluation(params);
+  }
+}
+
+function generateDemoEvaluation(
+  params: EvaluateAnswerParams,
+): InterviewAnswerEvaluation {
+  const answer = params.userAnswer.toLowerCase();
+  const keywords = params.question.expectedKeywords || [];
+  const matched = keywords.filter((kw) =>
+    answer.includes(kw.toLowerCase()),
+  );
+  const matchRatio = keywords.length > 0 ? matched.length / keywords.length : 0.5;
+
+  const wordCount = params.userAnswer.split(/\s+/).length;
+  let score = Math.round(40 + matchRatio * 40);
+  if (wordCount > 50) score += 8;
+  if (wordCount > 100) score += 7;
+  score = Math.min(score, 95);
+
+  const strengths: string[] = [];
+  const weaknesses: string[] = [];
+
+  if (matched.length > 0) {
+    strengths.push(`Mentioned relevant keywords: ${matched.join(", ")}`);
+  }
+  if (wordCount > 50) {
+    strengths.push("Provided a detailed response with good depth");
+  }
+  if (matched.length < keywords.length) {
+    const missing = keywords.filter((kw) => !answer.includes(kw.toLowerCase()));
+    weaknesses.push(`Missing key concepts: ${missing.slice(0, 3).join(", ")}`);
+  }
+  if (wordCount < 30) {
+    weaknesses.push("Answer could be more detailed and specific");
+  }
+
+  if (strengths.length === 0) strengths.push("Attempted to address the question");
+  if (weaknesses.length === 0) weaknesses.push("Could include more concrete examples");
+
+  return {
+    questionId: params.question.id,
+    question: params.question.question,
+    userAnswer: params.userAnswer,
+    score,
+    strengths,
+    weaknesses,
+    idealAnswer:
+      params.question.sampleAnswer ||
+      "A strong answer would include specific examples, relevant technical details, and quantifiable outcomes.",
+    starCompliance:
+      params.question.category === "behavioral"
+        ? {
+            situation: wordCount > 20 ? "Partially described" : "Not clearly stated",
+            task: "Could be more specific",
+            action: matched.length > 0 ? "Some relevant actions mentioned" : "Actions unclear",
+            result: "Quantifiable results would strengthen the answer",
+            score: Math.round(score * 0.8),
+          }
+        : undefined,
+    isDemo: true,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface GenerateReportParams {
+  role: string;
+  difficulty: string;
+  interviewType: string;
+  evaluations: InterviewAnswerEvaluation[];
+}
+
+/**
+ * Generates an aggregate final interview report using Gemini, or computes
+ * a demo report from the provided evaluations when no API key is configured.
+ */
+export async function generateInterviewReportWithGemini(
+  params: GenerateReportParams,
+): Promise<InterviewFinalReport> {
+  const apiKey = getGeminiApiKey();
+
+  if (!apiKey) {
+    console.warn("No GEMINI_API_KEY found. Falling back to demo report.");
+    return generateDemoReport(params);
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
+
+  const systemInstruction = `You are a senior interview panel chair producing a final assessment report.
+Aggregate the per-question evaluations into an overall report with:
+- overallScore (0-100), grade, categoryScores, keyStrengths, criticalImprovements,
+  detailedFeedback, readinessRecommendation, and per-question breakdowns.
+Grade mapping: 90-100 = "Staff / Principal Ready", 75-89 = "Senior Hire",
+60-74 = "Mid-Level Hire", below 60 = "Borderline / Needs Practice".
+Return strictly valid JSON.`;
+
+  const evaluationsSummary = params.evaluations
+    .map(
+      (e, i) =>
+        `Q${i + 1}: "${e.question}" — Score: ${e.score}/100\nAnswer: "${e.userAnswer.slice(0, 500)}"\nStrengths: ${e.strengths.join("; ")}\nWeaknesses: ${e.weaknesses.join("; ")}`,
+    )
+    .join("\n\n");
+
+  const prompt = `
+Role: ${params.role} | Difficulty: ${params.difficulty} | Type: ${params.interviewType}
+Total Questions: ${params.evaluations.length}
+
+Per-Question Evaluations:
+${evaluationsSummary}
+
+Generate the final aggregate interview report now.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+      config: {
+        systemInstruction,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            overallScore: { type: Type.INTEGER },
+            grade: { type: Type.STRING },
+            categoryScores: {
+              type: Type.OBJECT,
+              properties: {
+                technicalProficiency: { type: Type.INTEGER },
+                communicationClarity: { type: Type.INTEGER },
+                problemSolving: { type: Type.INTEGER },
+                cultureAndSTAR: { type: Type.INTEGER },
+              },
+              required: [
+                "technicalProficiency",
+                "communicationClarity",
+                "problemSolving",
+                "cultureAndSTAR",
+              ],
+            },
+            keyStrengths: { type: Type.ARRAY, items: { type: Type.STRING } },
+            criticalImprovements: {
+              type: Type.ARRAY,
+              items: { type: Type.STRING },
+            },
+            detailedFeedback: { type: Type.STRING },
+            readinessRecommendation: { type: Type.STRING },
+            questionBreakdowns: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  questionId: { type: Type.STRING },
+                  question: { type: Type.STRING },
+                  userAnswer: { type: Type.STRING },
+                  score: { type: Type.INTEGER },
+                  feedback: { type: Type.STRING },
+                  betterAlternative: { type: Type.STRING },
+                },
+                required: [
+                  "questionId",
+                  "question",
+                  "userAnswer",
+                  "score",
+                  "feedback",
+                  "betterAlternative",
+                ],
+              },
+            },
+          },
+          required: [
+            "overallScore",
+            "grade",
+            "categoryScores",
+            "keyStrengths",
+            "criticalImprovements",
+            "detailedFeedback",
+            "readinessRecommendation",
+            "questionBreakdowns",
+          ],
+        },
+      },
+    });
+
+    const parsed = JSON.parse(response.text || "{}");
+    return {
+      ...parsed,
+      completedAt: new Date().toISOString(),
+      isDemo: false,
+    };
+  } catch (error: any) {
+    console.error("Gemini generateInterviewReport error:", error);
+    return generateDemoReport(params);
+  }
+}
+
+function generateDemoReport(
+  params: GenerateReportParams,
+): InterviewFinalReport {
+  const evaluations = params.evaluations;
+  const avgScore =
+    evaluations.length > 0
+      ? Math.round(
+          evaluations.reduce((sum, e) => sum + e.score, 0) /
+            evaluations.length,
+        )
+      : 50;
+
+  let grade: InterviewFinalReport["grade"];
+  if (avgScore >= 90) grade = "Staff / Principal Ready";
+  else if (avgScore >= 75) grade = "Senior Hire";
+  else if (avgScore >= 60) grade = "Mid-Level Hire";
+  else grade = "Borderline / Needs Practice";
+
+  const allStrengths = evaluations.flatMap((e) => e.strengths);
+  const allWeaknesses = evaluations.flatMap((e) => e.weaknesses);
+
+  return {
+    overallScore: avgScore,
+    grade,
+    categoryScores: {
+      technicalProficiency: Math.min(Math.round(avgScore * 1.05), 100),
+      communicationClarity: Math.min(Math.round(avgScore * 0.95), 100),
+      problemSolving: Math.min(Math.round(avgScore * 1.0), 100),
+      cultureAndSTAR: Math.min(Math.round(avgScore * 0.9), 100),
+    },
+    keyStrengths: [...new Set(allStrengths)].slice(0, 4),
+    criticalImprovements: [...new Set(allWeaknesses)].slice(0, 4),
+    detailedFeedback: `Based on ${evaluations.length} evaluated answers, the candidate achieved an average score of ${avgScore}/100. ${avgScore >= 75 ? "The candidate demonstrates strong competency and is recommended for further rounds." : "The candidate shows potential but should focus on the improvement areas identified."}`,
+    readinessRecommendation:
+      avgScore >= 80
+        ? "Ready for final round interviews. Strong candidate with demonstrated expertise."
+        : avgScore >= 60
+          ? "Consider for next round with targeted follow-up on weak areas."
+          : "Recommend additional preparation before re-interviewing. Focus on fundamentals.",
+    questionBreakdowns: evaluations.map((e) => ({
+      questionId: e.questionId,
+      question: e.question,
+      userAnswer: e.userAnswer,
+      score: e.score,
+      feedback:
+        e.strengths.length > 0
+          ? `Strengths: ${e.strengths[0]}. ${e.weaknesses.length > 0 ? `Areas to improve: ${e.weaknesses[0]}` : ""}`
+          : "Review the ideal answer for guidance on improving this response.",
+      betterAlternative:
+        e.idealAnswer || "Provide specific examples with quantifiable outcomes.",
+    })),
+    completedAt: new Date().toISOString(),
     isDemo: true,
   };
 }
