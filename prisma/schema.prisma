@@ -13,15 +13,18 @@ datasource db {
 }
 
 model User {
-  id            String    @id
-  name          String
-  email         String
-  emailVerified Boolean   @default(false)
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  sessions      Session[]
-  accounts      Account[]
+  id                String             @id
+  name              String
+  email             String
+  emailVerified     Boolean            @default(false)
+  image             String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  sessions          Session[]
+  accounts          Account[]
+  resumes           Resume[]
+  resumeAnalyses    ResumeAnalysis[]
+  interviewSessions InterviewSession[]
 
   @@unique([email])
   @@map("user")
@@ -78,15 +81,16 @@ model Verification {
 }
 
 model Resume {
-  id     String @id @default(cuid())
-  userId String
+  id          String             @id @default(cuid())
+  userId      String
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   title       String?
   description String?
 
   photoUrl    String?
-  colorHex    String  @default("#FFE600")
-  borderStyle String  @default("squircle")
+  colorHex    String             @default("#FFE600")
+  borderStyle String             @default("squircle")
   summary     String?
   firstName   String?
   lastName    String?
@@ -96,8 +100,90 @@ model Resume {
   phone       String?
   email       String?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  skills      Json?
+  experience  Json?
+  education   Json?
+  atsScore    Int?               @default(80)
 
+  analyses    ResumeAnalysis[]
+  interviews  InterviewSession[]
+
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  @@index([userId])
   @@map("resumes")
+}
+
+model ResumeAnalysis {
+  id                   String   @id @default(cuid())
+  userId               String
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resumeId             String?
+  resume               Resume?  @relation(fields: [resumeId], references: [id], onDelete: SetNull)
+  atsScore             Int      @default(0)
+  targetRoleIdentified String?
+  scoreBreakdown       Json?
+  missingKeywords      String[]
+  matchedKeywords      String[]
+  formattingIssues     String[]
+  overallFeedback      String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([userId])
+  @@index([resumeId])
+  @@map("resume_analyses")
+}
+
+model InterviewSession {
+  id                      String              @id @default(cuid())
+  userId                  String
+  user                    User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resumeId                String?
+  resume                  Resume?             @relation(fields: [resumeId], references: [id], onDelete: SetNull)
+  role                    String
+  difficulty              String              @default("senior")
+  interviewType           String              @default("mixed")
+  status                  String              @default("IN_PROGRESS")
+  totalQuestions          Int                 @default(5)
+  overallScore            Int?
+  grade                   String?
+  categoryScores          Json?
+  keyStrengths            String[]
+  criticalImprovements    String[]
+  detailedFeedback        String?
+  readinessRecommendation String?
+  jobDescription          String?
+  questions               InterviewQuestion[]
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
+
+  @@index([userId])
+  @@index([resumeId])
+  @@map("interview_sessions")
+}
+
+model InterviewQuestion {
+  id               String           @id @default(cuid())
+  sessionId        String
+  session          InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  questionIndex    Int
+  question         String
+  category         String
+  expectedKeywords String[]
+  context          String?
+  hint             String?
+  sampleAnswer     String?
+  userAnswer       String?
+  score            Int?
+  strengths        String[]
+  weaknesses       String[]
+  idealAnswer      String?
+  starCompliance   Json?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@index([sessionId])
+  @@map("interview_questions")
 }

@@ -39,7 +39,7 @@ export class InterviewService {
         resumeText = [
           dbResume.jobTitle ? `Target Title: ${dbResume.jobTitle}` : "",
           dbResume.summary ? `Summary: ${dbResume.summary}` : "",
-          Array.isArray(dbResume.skills) && dbResume.skills.length > 0
+          Array.isArray(dbResume.skills) && (dbResume.skills as unknown[]).length > 0
             ? `Skills: ${JSON.stringify(dbResume.skills)}`
             : "",
         ]
@@ -72,7 +72,7 @@ export class InterviewService {
           totalQuestions: questions.length,
           jobDescription: payload.jobDescription?.trim() || null,
           questions: {
-            create: questions.map((q, idx) => ({
+            create: questions.map((q: any, idx: number) => ({
               questionIndex: idx,
               question: q.question,
               category: q.category,
@@ -280,4 +280,3 @@ export class InterviewService {
     });
   }
 }
-
