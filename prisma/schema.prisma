@@ -76,18 +76,19 @@ model ResumeAnalysis {
   id                      String   @id @default(cuid())
   userId                  String?
   user                    User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  resumeId                String
-  resume                  Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
-  atsScore                Int
-  scoreBreakdown          Json
-  missingKeywords         String[]
-  matchedKeywords         String[]
-  formattingIssues        String[]
-  bulletPointRewrites     Json
+  resumeId                String?
+  resume                  Resume?  @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  atsScore                Int      @default(0)
+  scoreBreakdown          Json?
+  missingKeywords         String[] @default([])
+  matchedKeywords         String[] @default([])
+  formattingIssues        String[] @default([])
+  bulletPointRewrites     Json?
   overallFeedback         String?
   targetRoleIdentified    String?
   detectedExperienceLevel String?
   createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt @default(now())
 
   @@index([userId])
   @@index([resumeId])
@@ -144,12 +145,6 @@ model Verification {
   @@map("verification")
 }
 
-enum InterviewStatus {
-  IN_PROGRESS
-  COMPLETED
-  ABANDONED
-}
-
 model InterviewSession {
   id                      String              @id @default(cuid())
   userId                  String
@@ -159,7 +154,7 @@ model InterviewSession {
   role                    String
   difficulty              String              @default("senior")
   interviewType           String              @default("mixed")
-  status                  InterviewStatus     @default(IN_PROGRESS)
+  status                  String              @default("IN_PROGRESS")
   totalQuestions          Int                 @default(5)
   jobDescription          String?
   overallScore            Int?
@@ -175,7 +170,7 @@ model InterviewSession {
 
   @@index([userId])
   @@index([resumeId])
-  @@map("interview_session")
+  @@map("interview_sessions")
 }
 
 model InterviewQuestion {
@@ -199,6 +194,5 @@ model InterviewQuestion {
   updatedAt        DateTime         @updatedAt
 
   @@index([sessionId])
-  @@map("interview_question")
+  @@map("interview_questions")
 }
-

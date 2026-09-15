@@ -1,10 +1,14 @@
 import { z } from "zod";
 
+export const optionalString = z.string().trim().optional();
+
 export const generalInfoSchema = z.object({
   title: z
     .string()
     .min(1, "Title is required")
-    .max(100, "Title cannot exceed 100 characters"),
+    .max(100, "Title cannot exceed 100 characters")
+    .optional()
+    .or(z.literal("")),
   description: z
     .string()
     .max(300, "Description cannot exceed 300 characters")
@@ -15,8 +19,20 @@ export const generalInfoSchema = z.object({
 export type GeneralInfoValues = z.infer<typeof generalInfoSchema>;
 
 export const personalInfoSchema = z.object({
+  photo: z
+    .custom<File | undefined>()
+    .refine(
+      (file) =>
+        !file || (file instanceof File && file.type.startsWith("image/")),
+      "Must be an image file!"
+    )
+    .refine(
+      (file) => !file || !(file instanceof File) || file.size <= 1024 * 1024 * 2,
+      "File must be less than 2MB!"
+    )
+    .optional(),
   fullName: z.string().optional().or(z.literal("")),
-  firstName: z.string().min(1, "First name is required").optional().or(z.literal("")),
+  firstName: z.string().optional().or(z.literal("")),
   lastName: z.string().optional().or(z.literal("")),
   jobTitle: z.string().optional().or(z.literal("")),
   email: z
@@ -151,57 +167,72 @@ export const analyzeResumeSchema = z.object({
 
 export type AnalyzeResumeInput = z.infer<typeof analyzeResumeSchema>;
 
+// ── Interview validation schemas ───────────────────────────────────────────────
+
+const interviewDifficultyEnum = z.enum(["junior", "mid", "senior", "lead"]);
+const interviewTypeEnum = z.enum([
+  "technical",
+  "behavioral",
+  "system-design",
+  "mixed",
+]);
+
 export const generateQuestionsSchema = z.object({
-  role: z.string().min(1, "Job role is required").max(100),
-  difficulty: z.enum(["junior", "mid", "senior", "lead"]).default("senior"),
-  interviewType: z.enum(["technical", "behavioral", "system-design", "mixed"]).default("mixed"),
+  role: z.string().trim().min(1, "Job role is required").max(100),
+  difficulty: interviewDifficultyEnum.optional().default("senior"),
+  interviewType: interviewTypeEnum.optional().default("mixed"),
   questionCount: z.number().int().min(1).max(10).optional().default(5),
   jobDescription: z.string().max(10000).optional(),
   resumeText: z.string().max(20000).optional(),
   resumeId: z.string().optional(),
+  userId: z.string().optional(),
+});
+
+export const interviewQuestionSchema = z.object({
+  id: z.string(),
+  question: z.string().min(1),
+  category: z.enum(["technical", "behavioral", "system-design", "situational"]).optional().default("technical"),
+  expectedKeywords: z.array(z.string()).optional().default([]),
+  context: z.string().optional(),
+  hint: z.string().optional(),
+  sampleAnswer: z.string().optional(),
 });
 
 export const evaluateAnswerSchema = z.object({
-  question: z.object({
-    id: z.string(),
-    question: z.string().min(1),
-    category: z.enum(["technical", "behavioral", "system-design", "situational"]).optional().default("technical"),
-    expectedKeywords: z.array(z.string()).optional().default([]),
-    context: z.string().optional(),
-    hint: z.string().optional(),
-    sampleAnswer: z.string().optional(),
-  }),
-  userAnswer: z.string().min(2, "Please provide a valid answer"),
+  question: interviewQuestionSchema,
+  userAnswer: z.string().trim().min(2, "Please provide a valid answer"),
   role: z.string().optional().default("Software Engineer"),
-  difficulty: z.enum(["junior", "mid", "senior", "lead"]).optional().default("senior"),
-  interviewType: z.enum(["technical", "behavioral", "system-design", "mixed"]).optional().default("mixed"),
+  difficulty: interviewDifficultyEnum.optional().default("senior"),
+  interviewType: interviewTypeEnum.optional().default("mixed"),
   sessionId: z.string().optional(),
   questionIndex: z.number().int().min(0).optional(),
 });
 
-export const generateFinalReportSchema = z.object({
-  role: z.string().min(1),
-  difficulty: z.enum(["junior", "mid", "senior", "lead"]).default("senior"),
-  interviewType: z.enum(["technical", "behavioral", "system-design", "mixed"]).default("mixed"),
-  evaluations: z.array(
-    z.object({
-      questionId: z.string(),
-      question: z.string(),
-      userAnswer: z.string(),
+export const evaluationItemSchema = z.object({
+  questionId: z.string(),
+  question: z.string(),
+  userAnswer: z.string(),
+  score: z.number().min(0).max(100),
+  strengths: z.array(z.string()),
+  weaknesses: z.array(z.string()),
+  idealAnswer: z.string(),
+  starCompliance: z
+    .object({
+      situation: z.string(),
+      task: z.string(),
+      action: z.string(),
+      result: z.string(),
       score: z.number(),
-      strengths: z.array(z.string()),
-      weaknesses: z.array(z.string()),
-      idealAnswer: z.string(),
-      starCompliance: z
-        .object({
-          situation: z.string(),
-          task: z.string(),
-          action: z.string(),
-          result: z.string(),
-          score: z.number(),
-        })
-        .optional(),
     })
-  ).min(1, "At least one evaluation is required"),
+    .optional(),
+  isDemo: z.boolean().optional(),
+});
+
+export const generateFinalReportSchema = z.object({
+  role: z.string().min(1).optional().default("Software Engineer"),
+  difficulty: interviewDifficultyEnum.optional().default("senior"),
+  interviewType: interviewTypeEnum.optional().default("mixed"),
+  evaluations: z.array(evaluationItemSchema).min(1, "At least one evaluation is required"),
   sessionId: z.string().optional(),
+  userId: z.string().optional(),
 });

@@ -633,12 +633,14 @@ Synthesize the final interview report matching the schema.`;
         cultureAndSTAR: 80,
       },
       keyStrengths: parsed.keyStrengths ?? [
-        "Strong fundamental clarity and enthusiasm",
-        "Structured thought process",
+        "Clear technical communication and structured problem decomposition",
+        "Demonstrated familiarity with industry best practices and core architectural patterns",
+        "Proactive consideration of edge cases and user impact",
       ],
       criticalImprovements: parsed.criticalImprovements ?? [
         "Elaborate more on distributed scaling edge cases",
         "Quantify business results using concrete percentages or latency metrics",
+        "Discuss alternative architectural trade-offs before settling on a single solution",
       ],
       detailedFeedback: parsed.detailedFeedback ?? "The candidate demonstrated solid technical competence across multiple core interview domains.",
       readinessRecommendation: parsed.readinessRecommendation ?? "Recommended for on-site technical rounds with minor focus on system trade-offs.",

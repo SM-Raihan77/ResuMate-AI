@@ -102,8 +102,8 @@ export class DashboardService {
     const peakInterviewScore = completedInterviewAgg._max.overallScore ?? undefined;
 
     // ── 3. Map resumes → ResumeDocument[] ────────────────────────────────────
-    const mappedResumes: ResumeDocument[] = userResumes.map((r) => {
-      const latestAnalysis = r.analyses[0];
+    const mappedResumes: ResumeDocument[] = userResumes.map((r: any) => {
+      const latestAnalysis = r.analyses?.[0];
       const breakdown = latestAnalysis?.scoreBreakdown as Record<string, number> | null;
       const role = r.jobTitle || latestAnalysis?.targetRoleIdentified || "Full Stack Engineer";
 
@@ -140,7 +140,7 @@ export class DashboardService {
           latestAnalysis?.matchedKeywords && latestAnalysis.matchedKeywords.length > 0
             ? latestAnalysis.matchedKeywords
             : Array.isArray(r.skills)
-            ? (r.skills as { skills?: string[] }[]).flatMap((s) => s.skills || []).slice(0, 8)
+            ? (r.skills as { skills?: string[] }[]).flatMap((s: any) => s.skills || []).slice(0, 8)
             : ["TypeScript", "React", "Next.js", "PostgreSQL", "Node.js"],
         summary:
           r.summary ||
@@ -156,7 +156,7 @@ export class DashboardService {
                   endDate?: string;
                   highlights?: string[];
                 }[]
-              ).map((exp) => ({
+              ).map((exp: any) => ({
                 role: exp.role || "Software Engineer",
                 company: exp.company || "Technology Company",
                 period: `${exp.startDate || "2022"} - ${
@@ -182,7 +182,7 @@ export class DashboardService {
               ],
         skills:
           Array.isArray(r.skills) && (r.skills as unknown[]).length > 0
-            ? (r.skills as { skills?: string[] }[]).flatMap((s) => s.skills || [])
+            ? (r.skills as { skills?: string[] }[]).flatMap((s: any) => s.skills || [])
             : ["TypeScript", "React", "Next.js", "Node.js", "PostgreSQL", "Docker"],
         education:
           Array.isArray(r.education) && (r.education as unknown[]).length > 0
@@ -204,7 +204,7 @@ export class DashboardService {
     });
 
     // ── 4. Map completed interviews → InterviewHistoryItem[] ─────────────────
-    const mappedInterviews: InterviewHistoryItem[] = completedSessionsRaw.map((s) => {
+    const mappedInterviews: InterviewHistoryItem[] = completedSessionsRaw.map((s: any) => {
       const diffStr = (s.difficulty || "senior").toLowerCase();
       const validDiff = (["junior", "mid", "senior", "lead"] as const).includes(
         diffStr as "junior" | "mid" | "senior" | "lead"
@@ -309,7 +309,7 @@ export class DashboardService {
     if (completedSessionsRaw.length > 0) {
       // Reverse to chronological order (oldest → newest), limit to last 8 sessions
       const sorted = [...completedSessionsRaw].reverse().slice(-8);
-      sorted.forEach((session) => {
+      sorted.forEach((session: any) => {
         const catScores = (session.categoryScores as Record<string, number> | null) || {};
         analyticsData.push({
           date: session.createdAt.toLocaleDateString("en-US", {
@@ -412,7 +412,7 @@ export class DashboardService {
     // ── 8. Unified activity feed: resumes + analyses + interviews ─────────────
     const recentActivities: RecentActivityItem[] = [];
 
-    userResumes.slice(0, 3).forEach((r) => {
+    userResumes.slice(0, 3).forEach((r: any) => {
       recentActivities.push({
         id: `act-res-${r.id}`,
         title: `Updated Resume: "${r.title || "Untitled"}"`,
@@ -423,7 +423,7 @@ export class DashboardService {
       });
     });
 
-    recentAnalyses.slice(0, 3).forEach((a) => {
+    recentAnalyses.slice(0, 3).forEach((a: any) => {
       recentActivities.push({
         id: `act-ana-${a.id}`,
         title: `Completed ATS Resume Audit`,
@@ -436,7 +436,7 @@ export class DashboardService {
       });
     });
 
-    completedSessionsRaw.slice(0, 3).forEach((s) => {
+    completedSessionsRaw.slice(0, 3).forEach((s: any) => {
       recentActivities.push({
         id: `act-int-${s.id}`,
         title: `Completed Mock Interview: ${s.role}`,
@@ -451,7 +451,7 @@ export class DashboardService {
 
     // Sort all events newest-first
     recentActivities.sort(
-      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      (a: RecentActivityItem, b: RecentActivityItem) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     );
 
     return {
