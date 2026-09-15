@@ -59,7 +59,7 @@ export function GeneralInfoForm({
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            title: values.title.trim(),
+            title: (values.title || "Untitled Resume").trim(),
             description: values.description?.trim() || null,
           }),
         });
