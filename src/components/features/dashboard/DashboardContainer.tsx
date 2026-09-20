@@ -410,7 +410,7 @@ ${(exp.highlights || []).map((h) => `- ${h}`).join("\n")}`
 
   if (!isLoaded) {
     return (
-      <div className="min-h-screen bg-[#08090C] text-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-transparent text-gray-100 flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 rounded-full border-2 border-[#FFE600] border-t-transparent animate-spin" />
           <p className="text-xs font-mono text-gray-400">Loading Candidate Intelligence...</p>
@@ -420,7 +420,7 @@ ${(exp.highlights || []).map((h) => `- ${h}`).join("\n")}`
   }
 
   return (
-    <div className="min-h-screen bg-[#08090C] text-gray-100 flex selection:bg-[#FFE600]/30 selection:text-white">
+    <div className="min-h-screen bg-transparent text-gray-100 flex selection:bg-[#FFE600]/30 selection:text-white">
       {/* Hidden File Input for in-dashboard instant resume scanning */}
       <input
         type="file"

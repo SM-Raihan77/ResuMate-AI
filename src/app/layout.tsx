@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toast";
+import { ConstellationBackground } from "@/components/ui/constellation-background";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,10 +34,23 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      data-scroll-behavior="smooth"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
     >
-      <body className="min-h-full flex flex-col bg-[#08090C] text-gray-100 font-sans selection:bg-cyber-yellow/30 selection:text-white">
-        {children}
+      <body 
+        suppressHydrationWarning
+        className="min-h-full flex flex-col text-gray-100 font-sans selection:bg-cyber-yellow/30 selection:text-white"
+      >
+        <ConstellationBackground
+          variant="default"
+          showGrid={true}
+          showGlows={true}
+          interactive={true}
+          className="min-h-screen flex flex-col"
+        >
+          {children}
+        </ConstellationBackground>
         <Toaster />
       </body>
     </html>

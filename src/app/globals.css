@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #08090c;
+  --background: #070913;
   --foreground: #f3f4f6;
   --yellow-accent: #ffe600;
   --yellow-hover: #ffea00;
@@ -27,12 +27,28 @@ html {
 }
 
 body {
-  background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
   overflow-x: hidden;
   selection-background-color: rgba(255, 230, 0, 0.25);
   selection-color: #000000;
+}
+
+/* Fullscreen Grid Dots Overlay */
+.bg-grid-overlay {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Constellation Canvas Viewport */
+[id^="constellation-"],
+[id^="constellation-"] canvas {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+  pointer-events: none !important;
 }
 
 ::selection {
@@ -108,4 +124,62 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #2d3039;
+}
+
+/* Infinite Marquee Wall Animations */
+@keyframes marquee-scroll-left {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes marquee-scroll-right {
+  0% {
+    transform: translate3d(-50%, 0, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.animate-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee-scroll-left 55s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee-row-1 {
+  display: flex;
+  width: max-content;
+  animation: marquee-scroll-left 48s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee-row-2 {
+  display: flex;
+  width: max-content;
+  animation: marquee-scroll-right 56s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee-row-3 {
+  display: flex;
+  width: max-content;
+  animation: marquee-scroll-left 52s linear infinite;
+  will-change: transform;
+}
+
+.pause-hover:hover {
+  animation-play-state: paused !important;
+}
+
+.group-pause:hover .animate-marquee-track,
+.group-pause:hover .animate-marquee-row-1,
+.group-pause:hover .animate-marquee-row-2,
+.group-pause:hover .animate-marquee-row-3 {
+  animation-play-state: paused !important;
 }

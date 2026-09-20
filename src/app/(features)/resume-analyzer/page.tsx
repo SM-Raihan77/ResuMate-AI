@@ -252,7 +252,7 @@ ${analysisResult.bulletPointRewrites
   };
 
   return (
-    <div className="min-h-screen bg-[#08090C] text-gray-100 flex flex-col selection:bg-[#FFE600]/30 selection:text-white">
+    <div className="min-h-screen bg-transparent text-gray-100 flex flex-col selection:bg-[#FFE600]/30 selection:text-white">
       <Navbar />
 
       <main className="flex-1 pb-24 relative overflow-hidden">
@@ -471,7 +471,7 @@ export default function ResumeAnalyzerPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#08090C] text-gray-100 flex items-center justify-center">
+        <div className="min-h-screen bg-transparent text-gray-100 flex items-center justify-center">
           <div className="flex items-center gap-3">
             <Loader2 className="w-6 h-6 animate-spin text-[#FFE600]" />
             <span className="text-sm font-semibold text-gray-400">Loading Resume Analyzer...</span>
