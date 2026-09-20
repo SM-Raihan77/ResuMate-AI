@@ -18,9 +18,9 @@ import {
   Mail,
   Wrench,
   UserCheck,
+  User,
 } from "lucide-react";
 import { signOut, useSession } from "@/lib/auth-client";
-import { CreateResumeButton } from "@/components/features/builder";
 
 export default function Navbar(): React.JSX.Element {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -35,6 +35,36 @@ export default function Navbar(): React.JSX.Element {
 
   // Fetch session data from better-auth
   const { data: session } = useSession();
+  const user = session?.user as
+    | {
+        name?: string | null;
+        email?: string | null;
+        image?: string | null;
+        avatar?: string | null;
+        picture?: string | null;
+        avatarUrl?: string | null;
+        image_url?: string | null;
+      }
+    | undefined;
+  const avatarUrl =
+    user?.image ||
+    user?.avatar ||
+    user?.picture ||
+    user?.avatarUrl ||
+    user?.image_url;
+  const [imageError, setImageError] = useState(false);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [avatarUrl]);
+
+  useEffect(() => {
+    if (session) {
+      console.log("[Navbar] Auth Session:", session);
+      console.log("[Navbar] Current User Data:", session.user);
+      console.log("[Navbar] Resolved Avatar URL:", avatarUrl);
+    }
+  }, [session, avatarUrl]);
 
   // Helper function to check if a route is active
   const isActive = (path: string) => {
@@ -98,13 +128,12 @@ export default function Navbar(): React.JSX.Element {
   };
 
   return (
-    <header
-      className={`sticky top-0 z-50 w-full transition-all duration-300 ${
-        isScrolled
-          ? "bg-[#08090c]/90 backdrop-blur-xl border-b border-white/[0.08] shadow-[0_10px_30px_rgba(0,0,0,0.8)]"
-          : "bg-[#08090c] border-b border-white/[0.05]"
-      }`}
-    >
+    <>
+      <header
+        className={`fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 bg-[#070913]/70 backdrop-blur-md border-b border-white/10 shadow-lg ${
+          isScrolled ? "shadow-[0_10px_30px_rgba(0,0,0,0.6)]" : ""
+        }`}
+      >
       <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
         {/* Left (Brand) */}
         <Link href="/" className="flex items-center gap-3 group shrink-0">
@@ -265,41 +294,63 @@ export default function Navbar(): React.JSX.Element {
           ) : (
             /* Authenticated User Actions */
             <div className="flex items-center gap-3">
-              <div className="hidden sm:block">
-                <CreateResumeButton variant="navbar" title="Create Resume" />
-              </div>
-
               <div className="relative" ref={userDropdownRef}>
                 <button
                   type="button"
                   onClick={() => setIsUserDropdownOpen((prev) => !prev)}
-                  className="px-3 py-1.5 flex items-center gap-2 rounded-full border border-neutral-800 bg-neutral-900/60 hover:border-neutral-700 transition-colors cursor-pointer focus:outline-none"
+                  className="relative p-0.5 rounded-full focus:outline-none focus:ring-2 focus:ring-[#FFE600]/40 transition-transform active:scale-95 cursor-pointer"
                   aria-label="User menu"
+                  aria-expanded={isUserDropdownOpen}
                 >
-                <div className="w-6 h-6 rounded-full bg-[#FFE600] flex items-center justify-center text-black font-black text-[10px]">
-                  {getInitials(session?.user?.name)}
-                </div>
-                <span className="text-xs font-semibold text-neutral-200">
-                  {session?.user?.name || "User"}
-                </span>
-                <ChevronDown
-                  className={`w-3.5 h-3.5 text-neutral-400 transition-transform duration-200 ${
-                    isUserDropdownOpen ? "rotate-180 text-white" : ""
-                  }`}
-                />
-              </button>
+                  {avatarUrl && !imageError ? (
+                    <img
+                      src={avatarUrl}
+                      alt={user?.name || "User avatar"}
+                      referrerPolicy="no-referrer"
+                      onError={() => setImageError(true)}
+                      className="w-9 h-9 rounded-full object-cover border border-white/20 shadow-md hover:border-[#FFE600]/60 transition-colors"
+                    />
+                  ) : (
+                    <div className="w-9 h-9 rounded-full bg-neutral-800 border border-white/20 flex items-center justify-center text-xs font-bold text-white shadow-md hover:border-[#FFE600]/60 transition-colors">
+                      {user?.name ? (
+                        getInitials(user.name)
+                      ) : (
+                        <User className="w-4 h-4 text-neutral-400" />
+                      )}
+                    </div>
+                  )}
+                </button>
 
-              {/* User Dropdown Menu */}
-              {isUserDropdownOpen && (
-                <div className="absolute right-0 mt-2.5 w-56 rounded-xl bg-neutral-900 border border-neutral-800 shadow-xl py-2 z-50 animate-in fade-in zoom-in-95 duration-150">
-                  <div className="px-4 py-2 border-b border-neutral-800 mb-1">
-                    <p className="text-xs font-semibold text-white">
-                      {session?.user?.name || "User"}
-                    </p>
-                    <p className="text-[11px] text-neutral-400 truncate">
-                      {session?.user?.email || ""}
-                    </p>
-                  </div>
+                {/* User Dropdown Menu */}
+                {isUserDropdownOpen && (
+                  <div className="absolute right-0 mt-2.5 w-56 rounded-xl bg-neutral-900 border border-neutral-800 shadow-xl py-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+                    <div className="px-4 py-2.5 border-b border-neutral-800 mb-1 flex items-center gap-3">
+                      {avatarUrl && !imageError ? (
+                        <img
+                          src={avatarUrl}
+                          alt={user?.name || "User avatar"}
+                          referrerPolicy="no-referrer"
+                          onError={() => setImageError(true)}
+                          className="w-9 h-9 rounded-full object-cover border border-white/20 shrink-0"
+                        />
+                      ) : (
+                        <div className="w-9 h-9 rounded-full bg-neutral-800 border border-white/20 flex items-center justify-center text-xs font-bold text-white shrink-0">
+                          {user?.name ? (
+                            getInitials(user.name)
+                          ) : (
+                            <User className="w-4 h-4 text-neutral-400" />
+                          )}
+                        </div>
+                      )}
+                      <div className="overflow-hidden min-w-0">
+                        <p className="text-xs font-semibold text-white truncate">
+                          {user?.name || "User"}
+                        </p>
+                        <p className="text-[11px] text-neutral-400 truncate">
+                          {user?.email || ""}
+                        </p>
+                      </div>
+                    </div>
 
                   <Link
                     href="/resume-analyzer"
@@ -413,7 +464,7 @@ export default function Navbar(): React.JSX.Element {
 
       {/* Mobile Drawer */}
       {isMobileMenuOpen && (
-        <div className="lg:hidden border-t border-neutral-800 bg-[#08090c]/98 backdrop-blur-2xl px-6 py-5 space-y-4 animate-in slide-in-from-top duration-200">
+        <div className="lg:hidden border-t border-white/10 bg-[#070913]/90 backdrop-blur-xl px-6 py-5 space-y-4 animate-in slide-in-from-top duration-200">
           <div className="space-y-1">
             <Link
               href="/resume-builder"
@@ -520,17 +571,49 @@ export default function Navbar(): React.JSX.Element {
                 </Link>
               </>
             ) : (
-              <button
-                type="button"
-                onClick={handleSignOut}
-                className="w-full py-2.5 rounded-xl text-sm font-medium text-rose-400 bg-rose-500/10 border border-rose-500/20 cursor-pointer"
-              >
-                Sign Out
-              </button>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-neutral-900/60 border border-neutral-800">
+                  {avatarUrl && !imageError ? (
+                    <img
+                      src={avatarUrl}
+                      alt={user?.name || "User avatar"}
+                      referrerPolicy="no-referrer"
+                      onError={() => setImageError(true)}
+                      className="w-9 h-9 rounded-full object-cover border border-white/20 shrink-0"
+                    />
+                  ) : (
+                    <div className="w-9 h-9 rounded-full bg-neutral-800 border border-white/20 flex items-center justify-center text-xs font-bold text-white shrink-0">
+                      {user?.name ? (
+                        getInitials(user.name)
+                      ) : (
+                        <User className="w-4 h-4 text-neutral-400" />
+                      )}
+                    </div>
+                  )}
+                  <div className="overflow-hidden min-w-0">
+                    <p className="text-xs font-semibold text-white truncate">
+                      {user?.name || "User"}
+                    </p>
+                    <p className="text-[11px] text-neutral-400 truncate">
+                      {user?.email || ""}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  className="w-full py-2.5 rounded-xl text-sm font-medium text-rose-400 bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 transition-colors cursor-pointer"
+                >
+                  Sign Out
+                </button>
+              </div>
             )}
           </div>
         </div>
       )}
-    </header>
+      </header>
+      {/* Spacer to prevent fixed navbar from covering top content */}
+      <div className="h-[73px] w-full shrink-0 pointer-events-none" aria-hidden="true" />
+    </>
   );
 }

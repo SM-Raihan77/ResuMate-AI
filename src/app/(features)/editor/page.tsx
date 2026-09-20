@@ -20,7 +20,7 @@ function EditorFallback() {
 
 export default function EditorPage() {
   return (
-    <div className="min-h-screen bg-[#08090C] text-gray-100 flex flex-col selection:bg-[#FFE600]/30 selection:text-white">
+    <div className="min-h-screen bg-transparent text-gray-100 flex flex-col selection:bg-[#FFE600]/30 selection:text-white">
       <Navbar />
 
       <main className="flex-1 pb-24 relative overflow-hidden">

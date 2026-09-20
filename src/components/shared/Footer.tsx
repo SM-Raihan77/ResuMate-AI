@@ -6,7 +6,7 @@ import { Bot, Mail, Phone, MapPin } from "lucide-react";
 
 export default function Footer(): React.JSX.Element {
   return (
-    <footer className="bg-[#050608] text-white border-t border-neutral-900 pt-16 pb-10 relative overflow-hidden">
+    <footer className="bg-transparent text-white border-t border-white/[0.06] pt-16 pb-10 relative overflow-hidden">
       {/* Subtle ambient glow */}
       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[450px] h-[120px] bg-[#FFE600]/2 rounded-full blur-[140px] pointer-events-none" />
 

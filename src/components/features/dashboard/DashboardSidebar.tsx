@@ -299,7 +299,7 @@ export function DashboardSidebar({
   return (
     <>
       {/* Desktop Persistent Sidebar */}
-      <aside className="hidden lg:block w-60 shrink-0 bg-neutral-950 border-r border-neutral-800 min-h-screen sticky top-0 h-screen overflow-y-auto">
+      <aside className="hidden lg:block w-60 shrink-0 bg-neutral-950/70 backdrop-blur-xl border-r border-white/[0.08] min-h-screen sticky top-0 h-screen overflow-y-auto">
         {sidebarContent}
       </aside>
 
@@ -310,7 +310,7 @@ export function DashboardSidebar({
           onClick={onCloseMobile}
         >
           <div
-            className="w-64 max-w-[85vw] h-full bg-neutral-950 border-r border-neutral-800 shadow-xl animate-in slide-in-from-left duration-200"
+            className="w-64 max-w-[85vw] h-full bg-neutral-950/95 backdrop-blur-xl border-r border-neutral-800 shadow-xl animate-in slide-in-from-left duration-200"
             onClick={(e) => e.stopPropagation()}
           >
             {sidebarContent}

@@ -20,9 +20,9 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen w-full grid lg:grid-cols-2 bg-background text-foreground">
+    <div className="min-h-screen w-full grid lg:grid-cols-2 bg-transparent text-foreground">
       {/* LEFT COLUMN: Branding & Value Proposition */}
-      <div className="relative hidden lg:flex flex-col justify-between p-12 overflow-hidden border-r border-white/5 bg-card-dark/50">
+      <div className="relative hidden lg:flex flex-col justify-between p-12 overflow-hidden border-r border-white/5 bg-card-dark/30 backdrop-blur-md">
         {/* Subtle Cyber Yellow Glow Effect */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
           <div className="absolute top-[-20%] left-[-10%] w-[70%] h-[70%] rounded-full bg-[var(--yellow-glow)] blur-[120px]" />

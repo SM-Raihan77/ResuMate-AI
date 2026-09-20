@@ -30,12 +30,7 @@ export default function Banner(): React.JSX.Element {
   const [activeTab, setActiveTab] = useState<'insights' | 'compare' | 'roles'>('insights');
 
   return (
-    <section className="relative w-full min-h-[calc(100vh-5rem)] flex items-center justify-center bg-[#08090C] overflow-hidden pt-10 pb-20 lg:py-24">
-      {/* Background Graphic & Golden Ambient Glows */}
-      <div className="absolute top-0 right-1/4 w-[450px] h-[450px] bg-[#FFE600]/5 rounded-full blur-[160px] pointer-events-none" />
-      <div className="absolute bottom-0 left-10 w-[400px] h-[400px] bg-[#FFE600]/4 rounded-full blur-[150px] pointer-events-none" />
-      <div className="absolute inset-0 bg-grid-pattern opacity-25 pointer-events-none" />
-
+    <section className="relative w-full min-h-[calc(100vh-5rem)] flex items-center justify-center pt-10 pb-20 lg:py-24 bg-transparent">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-12 items-center">
           {/* Left Column: Hero Copy & Value Proposition */}
@@ -103,45 +98,53 @@ export default function Banner(): React.JSX.Element {
 
           {/* Right Column: Live AI Diagnostic Card / HUD */}
           <div className="lg:col-span-5 relative">
-            <div className="relative rounded-2xl bg-neutral-900/90 border border-neutral-800 p-6 shadow-2xl backdrop-blur-xl transition-all duration-200">
+            {/* Ambient Background Glow for Floating Effect */}
+            <div className="absolute -inset-1.5 bg-gradient-to-r from-yellow-500/15 via-amber-500/10 to-yellow-500/15 rounded-3xl blur-2xl opacity-70 pointer-events-none" />
+
+            {/* Outer Container Card */}
+            <div className="bg-[#0b0f19]/60 backdrop-blur-md border border-white/10 rounded-3xl p-6 shadow-[0_20px_50px_rgba(0,0,0,0.5)] shadow-[0_0_50px_rgba(234,179,8,0.08)] relative transition-all duration-300 hover:border-yellow-500/30 overflow-hidden">
+              {/* Inner ambient glow blobs */}
+              <div className="absolute -top-16 -right-16 w-40 h-40 bg-yellow-500/10 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute -bottom-16 -left-16 w-40 h-40 bg-yellow-500/5 rounded-full blur-3xl pointer-events-none" />
+
               {/* Card Top Header */}
-              <div className="flex items-center justify-between pb-4 border-b border-neutral-800">
+              <div className="flex items-center justify-between pb-4 border-b border-white/10 relative z-10">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-[#FFE600]/10 border border-[#FFE600]/25 flex items-center justify-center text-[#FFE600]">
+                  <div className="w-8 h-8 rounded-xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-yellow-400 shadow-[0_0_15px_rgba(234,179,8,0.15)]">
                     <Sparkles className="w-4 h-4" />
                   </div>
                   <div>
                     <h3 className="text-xs font-bold text-white tracking-wide uppercase">
                       AI Diagnostic HUD
                     </h3>
-                    <p className="text-[11px] text-neutral-400">
+                    <p className="text-[11px] text-slate-400">
                       Live Telemetry & Evaluation
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-medium">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-[11px] font-semibold">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   <span>ATS Ready</span>
                 </div>
               </div>
 
               {/* Central ATS Score Dial */}
-              <div className="py-5 flex items-center justify-between gap-4">
+              <div className="py-5 flex items-center justify-between gap-4 relative z-10">
                 <div className="flex items-center gap-4">
                   <div className="relative w-18 h-18 flex items-center justify-center shrink-0">
-                    <svg className="w-18 h-18 -rotate-90" viewBox="0 0 36 36">
+                    <svg className="w-18 h-18 -rotate-90 drop-shadow-[0_0_10px_rgba(234,179,8,0.25)]" viewBox="0 0 36 36">
                       <path
-                        className="text-neutral-800"
-                        strokeWidth="3.5"
+                        className="text-white/10"
+                        strokeWidth="3.2"
                         stroke="currentColor"
                         fill="none"
                         d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                       />
                       <path
-                        className="text-[#FFE600] transition-all duration-1000 ease-out"
+                        className="text-yellow-400 transition-all duration-1000 ease-out drop-shadow-[0_0_12px_rgba(234,179,8,0.5)]"
                         strokeDasharray="94, 100"
-                        strokeWidth="3.5"
+                        strokeWidth="3.2"
                         strokeLinecap="round"
                         stroke="currentColor"
                         fill="none"
@@ -149,41 +152,41 @@ export default function Banner(): React.JSX.Element {
                       />
                     </svg>
                     <div className="absolute flex flex-col items-center justify-center">
-                      <span className="text-lg font-black text-white leading-none">94</span>
-                      <span className="text-[9px] font-medium text-neutral-400">/ 100</span>
+                      <span className="text-xl font-extrabold text-white leading-none tracking-tight">94</span>
+                      <span className="text-[9px] font-semibold text-slate-400 mt-0.5">/ 100</span>
                     </div>
                   </div>
 
                   <div className="space-y-0.5">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-semibold text-[#FFE600]">Top 3% Candidate Tier</span>
-                      <Award className="w-3.5 h-3.5 text-[#FFE600]" />
+                      <span className="text-xs font-semibold text-yellow-400">Top 3% Candidate Tier</span>
+                      <Award className="w-3.5 h-3.5 text-yellow-400" />
                     </div>
                     <h4 className="text-sm font-bold text-white">
                       Senior Software Engineer
                     </h4>
-                    <p className="text-[11px] text-neutral-400">
+                    <p className="text-[11px] text-slate-400">
                       Optimized for FAANG & High-Growth ATS
                     </p>
                   </div>
                 </div>
 
                 <div className="hidden sm:block text-right">
-                  <span className="px-2 py-1 rounded bg-neutral-950 text-[10px] font-mono text-neutral-400 border border-neutral-800">
+                  <span className="px-2.5 py-1 rounded-lg bg-[#070913]/90 text-[10px] font-mono text-slate-400 border border-white/10 shadow-inner">
                     SCAN #8824-A
                   </span>
                 </div>
               </div>
 
               {/* Navigation Tabs */}
-              <div className="flex rounded-lg bg-neutral-950 p-1 border border-neutral-800 mb-4">
+              <div className="flex rounded-full bg-[#070913]/80 border border-white/10 p-1 backdrop-blur-md mb-4 relative z-10">
                 <button
                   type="button"
                   onClick={() => setActiveTab('insights')}
-                  className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all cursor-pointer ${
+                  className={`flex-1 py-1.5 text-xs font-semibold rounded-full transition-all cursor-pointer ${
                     activeTab === 'insights' 
-                      ? 'bg-neutral-800 text-white font-semibold shadow-sm' 
-                      : 'text-neutral-400 hover:text-white'
+                      ? 'bg-yellow-500 text-black shadow-[0_0_15px_rgba(234,179,8,0.3)]' 
+                      : 'text-slate-400 hover:text-white'
                   }`}
                 >
                   AI Insights
@@ -191,10 +194,10 @@ export default function Banner(): React.JSX.Element {
                 <button
                   type="button"
                   onClick={() => setActiveTab('compare')}
-                  className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all cursor-pointer ${
+                  className={`flex-1 py-1.5 text-xs font-semibold rounded-full transition-all cursor-pointer ${
                     activeTab === 'compare' 
-                      ? 'bg-neutral-800 text-white font-semibold shadow-sm' 
-                      : 'text-neutral-400 hover:text-white'
+                      ? 'bg-yellow-500 text-black shadow-[0_0_15px_rgba(234,179,8,0.3)]' 
+                      : 'text-slate-400 hover:text-white'
                   }`}
                 >
                   Before vs After
@@ -202,10 +205,10 @@ export default function Banner(): React.JSX.Element {
                 <button
                   type="button"
                   onClick={() => setActiveTab('roles')}
-                  className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all cursor-pointer ${
+                  className={`flex-1 py-1.5 text-xs font-semibold rounded-full transition-all cursor-pointer ${
                     activeTab === 'roles' 
-                      ? 'bg-neutral-800 text-white font-semibold shadow-sm' 
-                      : 'text-neutral-400 hover:text-white'
+                      ? 'bg-yellow-500 text-black shadow-[0_0_15px_rgba(234,179,8,0.3)]' 
+                      : 'text-slate-400 hover:text-white'
                   }`}
                 >
                   Target Fit
@@ -213,29 +216,29 @@ export default function Banner(): React.JSX.Element {
               </div>
 
               {/* Tab Content */}
-              <div className="min-h-[150px]">
+              <div className="min-h-[150px] relative z-10">
                 {activeTab === 'insights' && (
-                  <div className="space-y-2 animate-in fade-in duration-200">
-                    <div className="p-2.5 rounded-xl bg-neutral-950/60 border border-neutral-800 flex items-center justify-between">
+                  <div className="space-y-2.5 animate-in fade-in duration-200">
+                    <div className="bg-[#070913]/50 border border-white/5 hover:border-white/20 rounded-xl p-3 backdrop-blur-sm transition-all flex items-center justify-between">
                       <div className="flex items-center gap-2.5">
                         <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                        <span className="text-xs text-neutral-200 font-medium">Impact & Metric Density</span>
+                        <span className="text-xs text-slate-200 font-medium">Impact & Metric Density</span>
                       </div>
                       <span className="text-xs font-semibold text-emerald-400">+38% Quantified</span>
                     </div>
 
-                    <div className="p-2.5 rounded-xl bg-neutral-950/60 border border-neutral-800 flex items-center justify-between">
+                    <div className="bg-[#070913]/50 border border-white/5 hover:border-white/20 rounded-xl p-3 backdrop-blur-sm transition-all flex items-center justify-between">
                       <div className="flex items-center gap-2.5">
-                        <TrendingUp className="w-4 h-4 text-[#FFE600] shrink-0" />
-                        <span className="text-xs text-neutral-200 font-medium">Keywords: Distributed Systems, Next.js</span>
+                        <TrendingUp className="w-4 h-4 text-yellow-400 shrink-0" />
+                        <span className="text-xs text-slate-200 font-medium">Keywords: Distributed Systems, Next.js</span>
                       </div>
-                      <span className="text-xs font-semibold text-[#FFE600]">96% Matched</span>
+                      <span className="text-xs font-semibold text-yellow-400">96% Matched</span>
                     </div>
 
-                    <div className="p-2.5 rounded-xl bg-neutral-950/60 border border-neutral-800 flex items-center justify-between">
+                    <div className="bg-[#070913]/50 border border-white/5 hover:border-white/20 rounded-xl p-3 backdrop-blur-sm transition-all flex items-center justify-between">
                       <div className="flex items-center gap-2.5">
                         <ShieldCheck className="w-4 h-4 text-yellow-400 shrink-0" />
-                        <span className="text-xs text-neutral-200 font-medium">ATS Parser Compatibility</span>
+                        <span className="text-xs text-slate-200 font-medium">ATS Parser Compatibility</span>
                       </div>
                       <span className="text-xs font-semibold text-yellow-300">100% Validated</span>
                     </div>
@@ -243,26 +246,26 @@ export default function Banner(): React.JSX.Element {
                 )}
 
                 {activeTab === 'compare' && (
-                  <div className="space-y-2 text-xs animate-in fade-in duration-200">
-                    <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-neutral-300 space-y-1">
-                      <div className="flex items-center justify-between text-[11px] font-semibold text-rose-400">
+                  <div className="space-y-2.5 text-xs animate-in fade-in duration-200">
+                    <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-3 text-red-300 space-y-1">
+                      <div className="flex items-center justify-between text-[11px] font-semibold text-red-400">
                         <span>Original Bullet</span>
                         <span>ATS Score: 42</span>
                       </div>
-                      <p className="italic text-neutral-400">
+                      <p className="italic text-red-200/80 leading-relaxed">
                         &quot;Worked on React web application features and fixed bugs with team.&quot;
                       </p>
                     </div>
 
-                    <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-neutral-200 space-y-1">
+                    <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-3 text-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.08)] space-y-1">
                       <div className="flex items-center justify-between text-[11px] font-semibold text-emerald-400">
                         <span className="flex items-center gap-1">
                           <Sparkles className="w-3 h-3 text-emerald-400 fill-emerald-400" />
                           AI Optimized Bullet
                         </span>
-                        <span>ATS Score: 98</span>
+                        <span className="font-mono">ATS Score: 98</span>
                       </div>
-                      <p className="font-medium text-emerald-200">
+                      <p className="font-medium text-emerald-100 leading-relaxed">
                         &quot;Architected modular Next.js micro-frontends serving 2.4M MAU, reducing p99 latency by 42%.&quot;
                       </p>
                     </div>
@@ -270,43 +273,44 @@ export default function Banner(): React.JSX.Element {
                 )}
 
                 {activeTab === 'roles' && (
-                  <div className="space-y-2 text-xs animate-in fade-in duration-200">
-                    <div className="p-2.5 rounded-xl bg-neutral-950/60 border border-neutral-800 flex items-center justify-between">
+                  <div className="space-y-2.5 text-xs animate-in fade-in duration-200">
+                    <div className="bg-[#070913]/50 border border-white/5 hover:border-white/20 rounded-xl p-3 backdrop-blur-sm transition-all flex items-center justify-between">
                       <div className="space-y-0.5">
                         <div className="flex items-center gap-1.5">
                           <span className="font-semibold text-white">Staff Frontend Engineer</span>
-                          <span className="px-1.5 py-0.5 bg-[#FFE600]/15 text-[#FFE600] text-[10px] rounded font-semibold">96% Fit</span>
+                          <span className="px-1.5 py-0.5 bg-yellow-500/15 text-yellow-400 text-[10px] rounded-md font-semibold border border-yellow-500/20">96% Fit</span>
                         </div>
-                        <p className="text-[11px] text-neutral-400">Stripe • Remote • $190k - $240k</p>
+                        <p className="text-[11px] text-slate-400">Stripe • Remote • $190k - $240k</p>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-neutral-400" />
+                      <ChevronRight className="w-4 h-4 text-slate-400" />
                     </div>
 
-                    <div className="p-2.5 rounded-xl bg-neutral-950/60 border border-neutral-800 flex items-center justify-between">
+                    <div className="bg-[#070913]/50 border border-white/5 hover:border-white/20 rounded-xl p-3 backdrop-blur-sm transition-all flex items-center justify-between">
                       <div className="space-y-0.5">
                         <div className="flex items-center gap-1.5">
                           <span className="font-semibold text-white">AI Solutions Architect</span>
-                          <span className="px-1.5 py-0.5 bg-emerald-400/15 text-emerald-300 text-[10px] rounded font-semibold">92% Fit</span>
+                          <span className="px-1.5 py-0.5 bg-emerald-400/15 text-emerald-300 text-[10px] rounded-md font-semibold border border-emerald-400/20">92% Fit</span>
                         </div>
-                        <p className="text-[11px] text-neutral-400">Scale AI • Hybrid • $210k - $260k</p>
+                        <p className="text-[11px] text-slate-400">Scale AI • Hybrid • $210k - $260k</p>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-neutral-400" />
+                      <ChevronRight className="w-4 h-4 text-slate-400" />
                     </div>
                   </div>
                 )}
               </div>
 
               {/* Card Footer */}
-              <div className="mt-4 pt-3 border-t border-neutral-800 flex items-center justify-between text-xs">
-                <span className="text-neutral-400 flex items-center gap-1.5 text-[11px]">
-                  <RefreshCw className="w-3 h-3 text-[#FFE600] animate-spin" />
+              <div className="mt-4 pt-3.5 border-t border-white/10 flex items-center justify-between text-xs relative z-10">
+                <span className="text-slate-400 flex items-center gap-1.5 text-[11px]">
+                  <RefreshCw className="w-3 h-3 text-yellow-400 animate-spin" />
                   Auto-syncing ATS rules...
                 </span>
                 <Link 
                   href="/resume-analyzer" 
-                  className="text-[#FFE600] font-semibold hover:text-yellow-300 transition-colors flex items-center gap-1"
+                  className="text-yellow-400 hover:text-yellow-300 font-semibold inline-flex items-center gap-1.5 hover:gap-2.5 transition-all text-xs"
                 >
-                  Audit My Resume Free →
+                  <span>Audit My Resume Free</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
             </div>

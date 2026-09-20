@@ -15,7 +15,7 @@ export default function CTASection(): React.JSX.Element {
   };
 
   return (
-    <section id="cta" className="py-20 lg:py-24 bg-[#08090C] text-white relative overflow-hidden border-t border-neutral-900">
+    <section id="cta" className="py-20 lg:py-24 bg-transparent text-white relative overflow-hidden border-t border-white/[0.06]">
       {/* Background ambient lighting */}
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] bg-[#FFE600]/4 rounded-full blur-[180px] pointer-events-none" />
 
