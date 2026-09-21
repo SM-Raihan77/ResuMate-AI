@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
+import { useReactToPrint } from "react-to-print";
 import {
   Award,
   Download,
@@ -16,6 +17,7 @@ import {
   ShieldCheck,
   Zap,
   Database,
+  Loader2,
 } from "lucide-react";
 import {
   InterviewFinalReport,
@@ -41,6 +43,8 @@ export function InterviewReport({
   onReset,
 }: InterviewReportProps): React.JSX.Element {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(0);
+  const [isExportingPDF, setIsExportingPDF] = useState<boolean>(false);
+  const reportPrintRef = useRef<HTMLDivElement>(null);
 
 
   const getVerdictBadge = (grade: string) => {
@@ -69,6 +73,56 @@ export function InterviewReport({
   };
 
   const verdict = getVerdictBadge(report.grade);
+
+  const printPageStyle = `
+    @page {
+      size: A4 portrait;
+      margin: 12mm 14mm 12mm 14mm;
+    }
+    @media print {
+      html, body {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      .printable-scorecard-page {
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+        min-height: auto !important;
+      }
+      .scorecard-section {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+      }
+      .scorecard-question-item {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+        margin-bottom: 14px !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+  `;
+
+  const handleExportPDF = useReactToPrint({
+    contentRef: reportPrintRef,
+    documentTitle: `Interview_Scorecard_${role.replace(/\s+/g, "_")}_${report.overallScore}PTS`,
+    pageStyle: printPageStyle,
+    onBeforePrint: () => {
+      setIsExportingPDF(true);
+      return Promise.resolve();
+    },
+    onAfterPrint: () => {
+      setIsExportingPDF(false);
+    },
+  });
 
   const handleExportMarkdown = () => {
     const mdContent = `# ResuMate AI Mock Interview Performance Scorecard
@@ -159,15 +213,19 @@ ${q.betterAlternative}
           </p>
         </div>
 
-
         <div className="flex flex-wrap items-center gap-2.5">
           <button
             type="button"
-            onClick={handleExportMarkdown}
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-neutral-800/80 hover:bg-neutral-800 border border-neutral-700/60 text-xs font-medium text-neutral-200 hover:text-white transition-colors cursor-pointer"
+            onClick={() => handleExportPDF()}
+            disabled={isExportingPDF}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-neutral-800/80 hover:bg-neutral-800 border border-neutral-700/60 text-xs font-medium text-neutral-200 hover:text-white transition-colors cursor-pointer disabled:opacity-60 shadow-sm"
           >
-            <Download className="w-4 h-4 text-[#FFE600]" />
-            <span>Export Scorecard (.md)</span>
+            {isExportingPDF ? (
+              <Loader2 className="w-4 h-4 animate-spin text-[#FFE600]" />
+            ) : (
+              <Download className="w-4 h-4 text-[#FFE600]" />
+            )}
+            <span>{isExportingPDF ? "Generating PDF..." : "Export Scorecard (.pdf)"}</span>
           </button>
 
           <button
@@ -401,6 +459,178 @@ ${q.betterAlternative}
               </div>
             );
           })}
+        </div>
+      </div>
+
+      {/* Hidden Printable PDF Container (Cloned by react-to-print for high-fidelity PDF output) */}
+      <div style={{ display: "none" }}>
+        <div
+          ref={reportPrintRef}
+          className="printable-scorecard-page p-8 bg-white text-slate-900 font-sans space-y-6"
+          style={{ boxSizing: "border-box", width: "100%", maxWidth: "210mm", margin: "0 auto" }}
+        >
+          {/* PDF Header */}
+          <div className="border-b-2 border-slate-900 pb-4 flex justify-between items-start">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-black uppercase tracking-widest bg-[#FFE600] text-black px-2 py-0.5 rounded">
+                  ResuMate AI
+                </span>
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Mock Interview Executive Scorecard
+                </span>
+              </div>
+              <h1 className="text-2xl font-black text-slate-900 mt-2">
+                {role} ({difficulty.toUpperCase()})
+              </h1>
+              <p className="text-xs text-slate-600 mt-0.5">
+                Interview Focus: <span className="font-semibold text-slate-900">{interviewType.toUpperCase()}</span> • Completed:{" "}
+                <span className="font-semibold text-slate-900">{new Date().toLocaleDateString()}</span>
+                {sessionId && ` • Audit Session: ${sessionId.slice(0, 10)}...`}
+              </p>
+            </div>
+
+            <div className="text-right border-2 border-slate-900 rounded-xl p-3 bg-slate-50 min-w-[130px]">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                Overall Score
+              </p>
+              <p className="text-3xl font-black font-mono text-slate-900">
+                {report.overallScore}
+                <span className="text-sm font-normal text-slate-500">/100</span>
+              </p>
+              <p className="text-xs font-bold mt-0.5 text-slate-700">
+                {report.grade}
+              </p>
+            </div>
+          </div>
+
+          {/* Executive Summary & Recommendation */}
+          <div className="scorecard-section p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700">
+              Executive Assessment & Hiring Verdict
+            </h2>
+            <p className="text-xs text-slate-800 leading-relaxed">
+              {report.detailedFeedback}
+            </p>
+            <div className="pt-2 border-t border-slate-200">
+              <p className="text-[11px] font-bold text-slate-900">Readiness Recommendation:</p>
+              <p className="text-xs text-slate-700 italic mt-0.5">{report.readinessRecommendation}</p>
+            </div>
+          </div>
+
+          {/* Competency Scores Table */}
+          <div className="scorecard-section">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
+              Core Competency Breakdown
+            </h2>
+            <div className="grid grid-cols-4 gap-3 text-center">
+              <div className="p-2.5 rounded-lg border border-slate-200 bg-slate-50">
+                <p className="text-[10px] font-medium text-slate-500">Technical Precision</p>
+                <p className="text-lg font-bold font-mono text-slate-900 mt-1">
+                  {report.categoryScores.technicalProficiency}%
+                </p>
+              </div>
+              <div className="p-2.5 rounded-lg border border-slate-200 bg-slate-50">
+                <p className="text-[10px] font-medium text-slate-500">Communication & Clarity</p>
+                <p className="text-lg font-bold font-mono text-slate-900 mt-1">
+                  {report.categoryScores.communicationClarity}%
+                </p>
+              </div>
+              <div className="p-2.5 rounded-lg border border-slate-200 bg-slate-50">
+                <p className="text-[10px] font-medium text-slate-500">Problem Solving</p>
+                <p className="text-lg font-bold font-mono text-slate-900 mt-1">
+                  {report.categoryScores.problemSolving}%
+                </p>
+              </div>
+              <div className="p-2.5 rounded-lg border border-slate-200 bg-slate-50">
+                <p className="text-[10px] font-medium text-slate-500">STAR Method & Impact</p>
+                <p className="text-lg font-bold font-mono text-slate-900 mt-1">
+                  {report.categoryScores.cultureAndSTAR}%
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Strengths & Growth Areas */}
+          <div className="scorecard-section grid grid-cols-2 gap-4">
+            <div className="p-3.5 rounded-xl border border-emerald-200 bg-emerald-50/50">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-800 mb-2">
+                Demonstrated Strengths
+              </h3>
+              <ul className="space-y-1.5 text-xs text-slate-800">
+                {report.keyStrengths.map((s, idx) => (
+                  <li key={idx} className="flex items-start gap-1.5">
+                    <span className="text-emerald-600 font-bold">•</span>
+                    <span>{s}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="p-3.5 rounded-xl border border-amber-200 bg-amber-50/50">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-amber-800 mb-2">
+                Priority Growth Areas
+              </h3>
+              <ul className="space-y-1.5 text-xs text-slate-800">
+                {report.criticalImprovements.map((imp, idx) => (
+                  <li key={idx} className="flex items-start gap-1.5">
+                    <span className="text-amber-600 font-bold">•</span>
+                    <span>{imp}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          {/* Question-by-Question Detailed Review */}
+          <div className="scorecard-section pt-2">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-3 border-b border-slate-200 pb-1">
+              Question-by-Question Transcript & Model Alternatives
+            </h2>
+
+            <div className="space-y-4">
+              {report.questionBreakdowns.map((q, idx) => (
+                <div
+                  key={idx}
+                  className="scorecard-question-item p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 space-y-2 text-xs"
+                >
+                  <div className="flex justify-between items-start gap-2">
+                    <p className="font-bold text-slate-900">
+                      Question {idx + 1}: &ldquo;{q.question}&rdquo;
+                    </p>
+                    <span className="px-2 py-0.5 rounded font-mono font-bold text-xs bg-slate-200 text-slate-800 shrink-0">
+                      Score: {q.score}/100
+                    </span>
+                  </div>
+
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                      Submitted Answer:
+                    </p>
+                    <p className="text-slate-800 italic bg-white p-2 rounded border border-slate-200 mt-0.5">
+                      &ldquo;{q.userAnswer}&rdquo;
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-amber-800">
+                      AI Feedback & Critique:
+                    </p>
+                    <p className="text-slate-700 mt-0.5">{q.feedback}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-800 font-semibold">
+                      Staff / Principal Model Answer:
+                    </p>
+                    <p className="text-slate-800 bg-amber-50/60 p-2 rounded border border-amber-200/60 mt-0.5 whitespace-pre-line leading-relaxed">
+                      {q.betterAlternative}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>

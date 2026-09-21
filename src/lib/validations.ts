@@ -213,6 +213,8 @@ export const evaluationItemSchema = z.object({
   question: z.string(),
   userAnswer: z.string(),
   score: z.number().min(0).max(100),
+  isValidAnswer: z.boolean().optional(),
+  validationMessage: z.string().optional().nullable(),
   strengths: z.array(z.string()),
   weaknesses: z.array(z.string()),
   idealAnswer: z.string(),

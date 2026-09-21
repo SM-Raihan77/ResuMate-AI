@@ -91,6 +91,7 @@ function ResumeAnalyzerContent() {
   }) => {
     setIsLoading(true);
     setErrorMessage(null);
+    setAnalysisResult(null);
     setLoadingStep("1/3 Preparing resume data for AI engine...");
 
     try {
@@ -175,6 +176,7 @@ function ResumeAnalyzerContent() {
     } catch (err: any) {
       console.error("Resume analysis error:", err);
       setErrorMessage(err.message || "An unexpected error occurred during analysis.");
+      setAnalysisResult(null);
     } finally {
       setIsLoading(false);
       setLoadingStep("");

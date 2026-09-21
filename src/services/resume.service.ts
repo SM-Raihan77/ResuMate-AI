@@ -1,5 +1,6 @@
 import { extractTextFromFile } from "@/lib/document-parser";
 import { analyzeResumeWithGemini, getGeminiApiKey } from "@/lib/gemini";
+import { validateResumeDocument } from "@/lib/resume-validator";
 import { ResumeAnalysisResult } from "@/types/analyzer";
 import { ResumeBuilderState, INITIAL_RESUME_DATA } from "@/types/builder";
 import prisma from "@/lib/prisma";
@@ -58,7 +59,16 @@ export class ResumeService {
       );
     }
 
-    // 2. Execute AI ATS evaluation with Google Gemini
+    // 2. Validate that the document is a genuine resume before running ATS analysis
+    const validation = await validateResumeDocument(extractedText);
+    if (!validation.isValid) {
+      throw new Error(
+        validation.reason ||
+          "This document doesn't appear to be a resume. Please upload a valid resume."
+      );
+    }
+
+    // 3. Execute AI ATS evaluation with Google Gemini
     const analysis = await analyzeResumeWithGemini(
       extractedText,
       params.jobDescription?.trim()
