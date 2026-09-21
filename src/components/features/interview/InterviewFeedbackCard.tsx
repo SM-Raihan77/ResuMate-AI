@@ -30,16 +30,21 @@ export function InterviewFeedbackCard({
 }: InterviewFeedbackCardProps): React.JSX.Element {
   const [showIdealAnswer, setShowIdealAnswer] = useState<boolean>(true);
 
-  const getScoreColor = (score: number) => {
+  const isInvalid = evaluation.isValidAnswer === false;
+
+  const getScoreColor = (score: number, invalid: boolean) => {
+    if (invalid) return "text-rose-400 border-rose-500/30 bg-rose-500/10";
     if (score >= 85) return "text-emerald-400 border-emerald-500/30 bg-emerald-500/10";
     if (score >= 70) return "text-[#FFE600] border-[#FFE600]/30 bg-[#FFE600]/10";
     return "text-rose-400 border-rose-500/30 bg-rose-500/10";
   };
 
-  const getScoreLabel = (score: number) => {
+  const getScoreLabel = (score: number, invalid: boolean) => {
+    if (invalid) return "Off-Topic / Invalid Response";
     if (score >= 90) return "Staff / Principal Caliber";
     if (score >= 78) return "Senior Bar Met";
     if (score >= 65) return "Mid-Level Standard";
+    if (score <= 10) return "Insufficient Answer";
     return "Needs Revision";
   };
 
@@ -61,14 +66,15 @@ export function InterviewFeedbackCard({
         <div className="flex items-center gap-3">
           <div
             className={`px-4 py-2 rounded-xl border flex items-center gap-2.5 ${getScoreColor(
-              evaluation.score
+              evaluation.score,
+              isInvalid
             )}`}
           >
             <div className="text-right">
               <p className="text-[10px] uppercase font-semibold tracking-wider opacity-80">
                 Question Score
               </p>
-              <p className="text-xs font-semibold">{getScoreLabel(evaluation.score)}</p>
+              <p className="text-xs font-semibold">{getScoreLabel(evaluation.score, isInvalid)}</p>
             </div>
             <span className="text-2xl font-extrabold font-mono">
               {evaluation.score}
@@ -77,6 +83,20 @@ export function InterviewFeedbackCard({
           </div>
         </div>
       </div>
+
+      {/* Validation Message Alert (if response was off-topic or invalid) */}
+      {isInvalid && (
+        <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs sm:text-sm flex items-start gap-3 animate-in fade-in">
+          <AlertTriangle className="w-5 h-5 shrink-0 text-rose-400 mt-0.5" />
+          <div className="space-y-0.5">
+            <p className="font-bold text-rose-200">Answer Not Evaluated</p>
+            <p className="text-xs text-rose-300/90 leading-relaxed">
+              {evaluation.validationMessage ||
+                "Your answer doesn't address the interview question. Please provide a relevant answer."}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Strengths & Weaknesses 2-Column Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -87,12 +107,18 @@ export function InterviewFeedbackCard({
             <span>What You Did Well</span>
           </div>
           <ul className="space-y-1.5 text-xs text-neutral-300">
-            {evaluation.strengths.map((s, idx) => (
-              <li key={idx} className="flex items-start gap-2">
-                <span className="text-emerald-400 font-bold">•</span>
-                <span>{s}</span>
+            {evaluation.strengths.length > 0 ? (
+              evaluation.strengths.map((s, idx) => (
+                <li key={idx} className="flex items-start gap-2">
+                  <span className="text-emerald-400 font-bold">•</span>
+                  <span>{s}</span>
+                </li>
+              ))
+            ) : (
+              <li className="text-neutral-500 italic">
+                No positive highlights identified for this response.
               </li>
-            ))}
+            )}
           </ul>
         </div>
 

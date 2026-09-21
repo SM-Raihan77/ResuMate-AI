@@ -25,6 +25,8 @@ export interface InterviewAnswerEvaluation {
   question: string;
   userAnswer: string;
   score: number; // 0-100
+  isValidAnswer?: boolean;
+  validationMessage?: string | null;
   strengths: string[];
   weaknesses: string[];
   idealAnswer: string;

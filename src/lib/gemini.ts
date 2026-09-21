@@ -411,27 +411,53 @@ export async function evaluateInterviewAnswerWithGemini(
     return generateDemoAnswerEvaluation(params);
   }
 
+  const isBehavioral =
+    params.question.category === "behavioral" ||
+    params.question.category === "situational";
+
   const ai = new GoogleGenAI({ apiKey });
 
-  const systemInstruction = `You are an elite Senior Staff Tech Interviewer and Hiring Committee Chair.
+  const systemInstruction = `You are an elite Senior Staff Tech Interviewer and Hiring Committee Chair at top tech companies (Google, Meta, Stripe).
 Evaluate the candidate's answer strictly, constructively, and thoroughly.
 
-Evaluation Rubric:
-1. score (0-100):
-   - 90-100: Staff/Principal-level answer. Clear structure, edge cases considered, high-impact terminology, STAR framework executed flawlessly.
-   - 75-89: Solid Senior hire. Covers core concept well, minor missed optimizations or trade-offs.
-   - 60-74: Mid-level answer. Understands basics but lacks depth, quantitative impact, or structured problem-solving.
-   - <60: Insufficient, vague, factually incorrect, or non-responsive.
-2. strengths: 2-3 specific points the candidate communicated effectively.
-3. weaknesses: 2-3 concrete gaps, missed trade-offs, or weak phrasing.
-4. idealAnswer: A concise, exemplary answer showing how a Staff Engineer / Top Performer would structure the response.
-5. starCompliance (if behavioral/situational): Breakdown of Situation, Task, Action, Result, with score.`;
+Step 1: Determine Validity & Question Relevance (CRITICAL):
+- Check if the answer is:
+  1. Meaningful (not random characters, keyboard mashing, or gibberish).
+  2. Professional (not abusive, insulting, or offensive).
+  3. Relevant to the specific interview question being asked.
+- If the answer is abusive, random gibberish, or completely irrelevant / off-topic (e.g. answering a technical question with a personal story about childhood, sports, village, cooking, etc., that does not address the question):
+  - Set isValidAnswer = false
+  - Set validationMessage = "Your answer doesn't address the interview question. Please provide a relevant answer." (or appropriate rejection explanation).
+  - Set score = 0
+  - Set strengths = [] (do NOT invent positive praise for irrelevant/abusive text).
+  - Set weaknesses = ["The response did not address the question asked."]
+  - Provide an idealAnswer showing how a Staff Engineer would answer this question.
+
+Step 2: Scoring Valid Answers (isValidAnswer = true):
+- If the answer is "I don't know", "not sure", or demonstrates lack of knowledge:
+  - Set isValidAnswer = true
+  - Set score = 0 to 10
+  - Set validationMessage = "The response indicates a lack of familiarity or knowledge on this topic."
+  - Set strengths = ["Honest acknowledgment of knowledge gap."] or []
+  - Set weaknesses = ["No technical knowledge or practical experience was demonstrated for this question."]
+- If the answer is short but valid (e.g. "Yes, I have used React for about one year" or a concise direct definition):
+  - Set isValidAnswer = true
+  - Score appropriately (e.g. 55-70) and provide constructive suggestions on expanding with technical mechanisms.
+- If the answer is a detailed technical or behavioral answer:
+  - 90-100: Staff/Principal-level answer. Clear structure, edge cases considered, high-impact terminology, quantified business results.
+  - 75-89: Solid Senior hire. Covers core concept well, minor missed optimizations or trade-offs.
+  - 60-74: Mid-level answer. Understands basics but lacks depth, quantitative impact, or structured problem-solving.
+  - <60: Vague or partially incorrect.
+${isBehavioral ? `- For behavioral/situational questions: Evaluate STAR framework compliance (Situation, Task, Action, Result).` : `- NOTE: This is a ${params.question.category} question. Do NOT require STAR format.`}
+
+You must return strictly valid JSON matching the requested schema.`;
 
   const prompt = `
 ROLE: ${params.role} (${params.difficulty} level)
 INTERVIEW FOCUS: ${params.interviewType}
-QUESTION: "${params.question.question}"
-EXPECTED KEYWORDS: ${params.question.expectedKeywords.join(", ")}
+QUESTION CATEGORY: ${params.question.category}
+INTERVIEW QUESTION: "${params.question.question}"
+EXPECTED KEYWORDS / CONCEPTS: ${params.question.expectedKeywords.join(", ")}
 
 CANDIDATE'S SUBMITTED ANSWER:
 """
@@ -450,6 +476,8 @@ Evaluate this response thoroughly and output structured JSON.`;
         responseSchema: {
           type: Type.OBJECT,
           properties: {
+            isValidAnswer: { type: Type.BOOLEAN },
+            validationMessage: { type: Type.STRING },
             score: { type: Type.INTEGER },
             strengths: {
               type: Type.ARRAY,
@@ -472,22 +500,37 @@ Evaluate this response thoroughly and output structured JSON.`;
               required: ["situation", "task", "action", "result", "score"],
             },
           },
-          required: ["score", "strengths", "weaknesses", "idealAnswer"],
+          required: ["isValidAnswer", "score", "strengths", "weaknesses", "idealAnswer"],
         },
       },
     });
 
     const parsed = JSON.parse(response.text || "{}");
+    const isValid = parsed.isValidAnswer !== false;
 
     return {
       questionId: params.question.id,
       question: params.question.question,
       userAnswer: params.userAnswer,
-      score: parsed.score ?? 75,
-      strengths: parsed.strengths ?? ["Clear initial approach"],
-      weaknesses: parsed.weaknesses ?? ["Could provide deeper trade-off analysis"],
-      idealAnswer: parsed.idealAnswer ?? params.question.sampleAnswer ?? "An ideal response would emphasize performance trade-offs and business impact.",
-      starCompliance: parsed.starCompliance,
+      isValidAnswer: isValid,
+      validationMessage:
+        parsed.validationMessage ||
+        (!isValid
+          ? "Your answer doesn't address the interview question. Please provide a relevant answer."
+          : undefined),
+      score: isValid ? (parsed.score ?? 75) : 0,
+      strengths: isValid ? (parsed.strengths ?? ["Clear initial approach"]) : [],
+      weaknesses:
+        parsed.weaknesses && parsed.weaknesses.length > 0
+          ? parsed.weaknesses
+          : !isValid
+          ? ["The response did not address the question asked."]
+          : ["Could provide deeper trade-off analysis"],
+      idealAnswer:
+        parsed.idealAnswer ??
+        params.question.sampleAnswer ??
+        "An ideal response would emphasize performance trade-offs and business impact.",
+      starCompliance: isBehavioral ? parsed.starCompliance : undefined,
       isDemo: false,
     };
   } catch (error: any) {
@@ -788,41 +831,191 @@ export function generateDemoInterviewQuestions(
   return baseBank.slice(0, count);
 }
 
+const INTERVIEW_STOP_WORDS = new Set([
+  "what", "is", "and", "why", "do", "we", "use", "it", "the", "a", "an",
+  "how", "to", "in", "of", "for", "with", "on", "at", "by", "from", "are",
+  "you", "your", "can", "should", "would", "could", "describe", "explain",
+  "tell", "me", "about", "when", "which", "this", "that", "these", "those",
+  "have", "been", "was", "were", "will", "does", "did"
+]);
+
 export function generateDemoAnswerEvaluation(
   params: EvaluateInterviewAnswerParams
 ): InterviewAnswerEvaluation {
-  const answer = params.userAnswer.trim();
-  const wordCount = answer.split(/\s+/).length;
+  const answer = (params.userAnswer || "").trim();
   const lowerAnswer = answer.toLowerCase();
+  const wordCount = answer.split(/\s+/).filter(Boolean).length;
+  const isBehavioral =
+    params.question.category === "behavioral" ||
+    params.question.category === "situational";
 
-  const matchedKeywords = params.question.expectedKeywords.filter((kw) =>
+  // 1. Check for abusive / profane / offensive language
+  const profanityPatterns = [
+    /\b(fuck|fucking|f\*\*\*|shit|bitch|asshole|bastard|idiot|moron|stfu|shut\s*up|screw\s*you|hate\s*you|crap)\b/i,
+  ];
+  const isAbusive = profanityPatterns.some((pattern) => pattern.test(lowerAnswer));
+  if (isAbusive) {
+    return {
+      questionId: params.question.id,
+      question: params.question.question,
+      userAnswer: params.userAnswer,
+      isValidAnswer: false,
+      validationMessage:
+        "Inappropriate or abusive language detected. Please provide a professional, relevant interview response.",
+      score: 0,
+      strengths: [],
+      weaknesses: [
+        "The submitted response contained inappropriate or unprofessional language.",
+      ],
+      idealAnswer:
+        params.question.sampleAnswer ||
+        "A professional response directly explains the core technical concept, operational trade-offs, and quantified impact.",
+      isDemo: true,
+    };
+  }
+
+  // 2. Check for random / keyboard mash / gibberish text
+  const isGibberish =
+    /^[a-z0-9\s!@#$%^&*()_+=\-[\]{};':"\\|,.<>/?`~]{1,30}$/i.test(answer) &&
+    (/(.)\1{3,}/.test(answer) ||
+      /^[bcdfghjklmnpqrstvwxyz\s!@#$%^&*()_+]{5,}$/i.test(answer) ||
+      /^(asdf|qwer|zxcv|1234|test123|abc123)/i.test(answer) ||
+      !/[a-zA-Z]{2,}/.test(answer));
+
+  if (isGibberish) {
+    return {
+      questionId: params.question.id,
+      question: params.question.question,
+      userAnswer: params.userAnswer,
+      isValidAnswer: false,
+      validationMessage:
+        "Your answer appears to be random or meaningless text. Please provide a clear and relevant response.",
+      score: 0,
+      strengths: [],
+      weaknesses: [
+        "The response consisted of random or unreadable characters with no substantive meaning.",
+      ],
+      idealAnswer:
+        params.question.sampleAnswer ||
+        "A clear, structured answer explaining the core mechanisms and design decisions.",
+      isDemo: true,
+    };
+  }
+
+  // 3. Check for "I don't know" / lack of knowledge indicators
+  const idkWereSaid = [
+    /^i\s+(?:don'?t|do\s+not)\s+know/i,
+    /^idk/i,
+    /^no\s+idea/i,
+    /^not\s+(?:sure|familiar)/i,
+    /^i\s+have\s+no\s+(?:idea|clue|knowledge)/i,
+    /^haven'?t\s+used\s+this/i,
+    /^skip/i,
+    /^pass/i,
+  ].some((pattern) => pattern.test(lowerAnswer));
+
+  if (idkWereSaid && wordCount <= 12) {
+    return {
+      questionId: params.question.id,
+      question: params.question.question,
+      userAnswer: params.userAnswer,
+      isValidAnswer: true,
+      validationMessage:
+        "The response indicates a lack of familiarity or knowledge on this topic.",
+      score: 5,
+      strengths: ["Honest acknowledgment of knowledge gap."],
+      weaknesses: [
+        "Did not demonstrate familiarity, conceptual definitions, or problem-solving approaches for this question.",
+      ],
+      idealAnswer:
+        params.question.sampleAnswer ||
+        "Review the core fundamentals and architecture for this topic to prepare for interview rounds.",
+      isDemo: true,
+    };
+  }
+
+  // 4. Relevance & Topic Overlap Check
+  const cleanTokens = (str: string) =>
+    str
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, " ")
+      .split(/\s+/)
+      .filter((w) => w.length > 2 && !INTERVIEW_STOP_WORDS.has(w));
+
+  const questionKeywords = cleanTokens(params.question.question);
+  const expectedKwTokens = (params.question.expectedKeywords || []).flatMap(cleanTokens);
+  const allTopicKeywords = Array.from(new Set([...questionKeywords, ...expectedKwTokens]));
+
+  const matchedExpected = (params.question.expectedKeywords || []).filter((kw) =>
     lowerAnswer.includes(kw.toLowerCase())
   );
+  const matchedTopicTokens = allTopicKeywords.filter((kw) => lowerAnswer.includes(kw));
 
+  // Check if answer mentions experience with the topic e.g. "Yes, I have used React for about one year"
+  const hasAffirmativeExperience =
+    /\b(yes|familiar|experience|worked with|used|built|developed|implemented|learning|started)\b/i.test(
+      lowerAnswer
+    ) && (matchedTopicTokens.length > 0 || matchedExpected.length > 0);
+
+  // If word count >= 5 and ZERO overlap with question or expected keywords, reject as irrelevant
+  const isOffTopic =
+    matchedExpected.length === 0 &&
+    matchedTopicTokens.length === 0 &&
+    !hasAffirmativeExperience &&
+    wordCount >= 5;
+
+  if (isOffTopic) {
+    return {
+      questionId: params.question.id,
+      question: params.question.question,
+      userAnswer: params.userAnswer,
+      isValidAnswer: false,
+      validationMessage:
+        "Your answer doesn't address the interview question. Please provide a relevant answer.",
+      score: 0,
+      strengths: [],
+      weaknesses: [
+        "The submitted response was completely unrelated to the interview question being asked.",
+      ],
+      idealAnswer:
+        params.question.sampleAnswer ||
+        "A relevant answer addresses the specific technical mechanisms, concepts, or scenarios presented in the question.",
+      isDemo: true,
+    };
+  }
+
+  // 5. Valid Relevant Answer Scoring
   let score = 65;
-  if (wordCount >= 40) score += 10;
-  if (wordCount >= 80) score += 8;
-  if (matchedKeywords.length >= 2) score += 10;
-  if (matchedKeywords.length >= 4) score += 5;
-  if (lowerAnswer.includes("because") || lowerAnswer.includes("for example") || lowerAnswer.includes("trade-off")) {
+  if (wordCount >= 25) score += 8;
+  if (wordCount >= 60) score += 7;
+  if (matchedExpected.length >= 1) score += 8;
+  if (matchedExpected.length >= 3) score += 7;
+  if (
+    lowerAnswer.includes("because") ||
+    lowerAnswer.includes("for example") ||
+    lowerAnswer.includes("trade-off") ||
+    lowerAnswer.includes("architecture")
+  ) {
     score += 5;
   }
   score = Math.min(Math.max(score, 50), 96);
 
   const strengths: string[] = [];
-  if (matchedKeywords.length > 0) {
-    strengths.push(`Directly referenced key concepts: ${matchedKeywords.join(", ")}.`);
+  if (matchedExpected.length > 0) {
+    strengths.push(`Directly referenced key concepts: ${matchedExpected.join(", ")}.`);
+  } else if (matchedTopicTokens.length > 0) {
+    strengths.push(`Addressed core topic terminology: ${matchedTopicTokens.slice(0, 3).join(", ")}.`);
   } else {
     strengths.push("Provided a coherent initial perspective on the problem.");
   }
-  if (wordCount > 50) {
+  if (wordCount > 40) {
     strengths.push("Good descriptive depth and willingness to elaborate on implementation details.");
   } else {
-    strengths.push("Concise and to the point.");
+    strengths.push("Concise and direct response.");
   }
 
   const weaknesses: string[] = [];
-  const missingKeywords = params.question.expectedKeywords.filter(
+  const missingKeywords = (params.question.expectedKeywords || []).filter(
     (kw) => !lowerAnswer.includes(kw.toLowerCase())
   );
   if (missingKeywords.length > 0) {
@@ -830,9 +1023,14 @@ export function generateDemoAnswerEvaluation(
       `Could have strengthened the response by incorporating: ${missingKeywords.slice(0, 3).join(", ")}.`
     );
   }
-  if (!lowerAnswer.includes("%") && !lowerAnswer.includes("ms") && !lowerAnswer.includes("metric")) {
+  if (
+    !lowerAnswer.includes("%") &&
+    !lowerAnswer.includes("ms") &&
+    !lowerAnswer.includes("metric") &&
+    !lowerAnswer.includes("latency")
+  ) {
     weaknesses.push(
-      "Add quantifiable business or performance metrics (e.g. latency cut by X%, scale of Y users) to demonstrate real-world impact."
+      "Add quantifiable metrics (e.g. % latency reduction, throughput, user scale) to demonstrate concrete business impact."
     );
   }
 
@@ -840,22 +1038,22 @@ export function generateDemoAnswerEvaluation(
     questionId: params.question.id,
     question: params.question.question,
     userAnswer: params.userAnswer,
+    isValidAnswer: true,
     score,
     strengths,
     weaknesses,
     idealAnswer:
       params.question.sampleAnswer ||
       "A top-tier answer addresses the core mechanism, explicitly discusses operational trade-offs, and provides quantifiable outcomes.",
-    starCompliance:
-      params.question.category === "behavioral" || params.question.category === "situational"
-        ? {
-            situation: "Context established",
-            task: "Clear objective defined",
-            action: "Specific architectural or personal action taken",
-            result: "Quantifiable outcome highlighted",
-            score: Math.min(score + 4, 98),
-          }
-        : undefined,
+    starCompliance: isBehavioral
+      ? {
+          situation: "Context established",
+          task: "Clear objective defined",
+          action: "Specific architectural or personal action taken",
+          result: "Quantifiable outcome highlighted",
+          score: Math.min(score + 4, 98),
+        }
+      : undefined,
     isDemo: true,
   };
 }

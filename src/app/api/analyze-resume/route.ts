@@ -189,7 +189,7 @@ export async function POST(request: NextRequest) {
     console.error("API /api/analyze-resume POST error:", error);
     const message = error instanceof Error ? error.message : "An unexpected error occurred while analyzing the resume.";
     return NextResponse.json(
-      { error: message },
+      { success: false, error: message },
       { status: 400 }
     );
   }
