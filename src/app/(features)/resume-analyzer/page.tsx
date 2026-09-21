@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { Navbar, Footer } from "@/components/shared";
 import {
   ResumeUploader,
@@ -11,6 +13,7 @@ import {
   BulletRewrites,
 } from "@/components/features/resume";
 import { ResumeAnalysisResult } from "@/types";
+import { saveResumeFromAnalysis } from "@/lib/dashboard-store";
 import {
   Sparkles,
   RotateCcw,
@@ -19,9 +22,19 @@ import {
   AlertTriangle,
   ArrowRight,
   Award,
+  Database,
+  FileText,
+  History,
+  Loader2,
 } from "lucide-react";
 
-export default function ResumeAnalyzerPage() {
+function ResumeAnalyzerContent() {
+  const searchParams = useSearchParams();
+  const urlResumeId = searchParams.get("resumeId") || undefined;
+
+  const [savedResumes, setSavedResumes] = useState<Array<{ id: string; title: string | null; updatedAt?: string }>>([]);
+  const [pastAnalyses, setPastAnalyses] = useState<ResumeAnalysisResult[]>([]);
+  const [selectedAnalysisIndex, setSelectedAnalysisIndex] = useState<number>(0);
   const [analysisResult, setAnalysisResult] = useState<ResumeAnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState("");
@@ -29,14 +42,57 @@ export default function ResumeAnalyzerPage() {
   const [fileName, setFileName] = useState<string>("");
   const resultsRef = useRef<HTMLDivElement>(null);
 
+  // 1. Fetch user's saved resumes on mount
+  useEffect(() => {
+    async function loadUserResumes() {
+      try {
+        const res = await fetch("/api/resumes");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.resumes)) {
+            setSavedResumes(data.resumes);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load user resumes for analyzer:", err);
+      }
+    }
+    loadUserResumes();
+  }, []);
+
+  // 2. If urlResumeId is provided, fetch previous analyses for it
+  useEffect(() => {
+    if (!urlResumeId) return;
+
+    async function loadPastAnalyses() {
+      if (!urlResumeId) return;
+      try {
+        const res = await fetch(`/api/analyze-resume?resumeId=${urlResumeId}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+            setPastAnalyses(data.data);
+            setAnalysisResult(data.data[0]);
+            setFileName(`Saved Resume (ID: ${urlResumeId.slice(0, 8)})`);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load historical analyses:", err);
+      }
+    }
+    loadPastAnalyses();
+  }, [urlResumeId]);
+
   const handleAnalyze = async (payload: {
     file?: File;
     resumeText?: string;
     jobDescription?: string;
+    resumeId?: string;
   }) => {
     setIsLoading(true);
     setErrorMessage(null);
-    setLoadingStep("1/3 Extracting text from document...");
+    setAnalysisResult(null);
+    setLoadingStep("1/3 Preparing resume data for AI engine...");
 
     try {
       let response: Response;
@@ -47,6 +103,9 @@ export default function ResumeAnalyzerPage() {
         formData.append("file", payload.file);
         if (payload.jobDescription) {
           formData.append("jobDescription", payload.jobDescription);
+        }
+        if (payload.resumeId) {
+          formData.append("resumeId", payload.resumeId);
         }
 
         setTimeout(() => {
@@ -62,7 +121,11 @@ export default function ResumeAnalyzerPage() {
           body: formData,
         });
       } else {
-        setFileName("Pasted Resume");
+        const displayName = payload.resumeId
+          ? savedResumes.find((r) => r.id === payload.resumeId)?.title || "Saved Resume"
+          : "Pasted Resume";
+        setFileName(displayName);
+
         setTimeout(() => {
           setLoadingStep("2/3 Evaluating ATS keyword overlap and formatting...");
         }, 1000);
@@ -75,6 +138,7 @@ export default function ResumeAnalyzerPage() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            resumeId: payload.resumeId,
             resumeText: payload.resumeText,
             jobDescription: payload.jobDescription,
           }),
@@ -87,7 +151,24 @@ export default function ResumeAnalyzerPage() {
         throw new Error(data.error || "Failed to analyze resume. Please try again.");
       }
 
-      setAnalysisResult(data.data);
+      const result: ResumeAnalysisResult = data.data;
+      setAnalysisResult(result);
+
+      // Add to past analyses list if persisted
+      if (result.id) {
+        setPastAnalyses((prev) => [result, ...prev.filter((p) => p.id !== result.id)]);
+        setSelectedAnalysisIndex(0);
+      }
+
+      // Save to real candidate store so it syncs immediately to the dashboard
+      try {
+        const fileSizeStr = payload.file?.size
+          ? (payload.file.size / 1024).toFixed(0) + " KB"
+          : "Database Record";
+        saveResumeFromAnalysis(result, fileName, fileSizeStr, payload.resumeText);
+      } catch (storageErr) {
+        console.error("Failed to save resume to real dashboard store:", storageErr);
+      }
 
       setTimeout(() => {
         resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -95,9 +176,17 @@ export default function ResumeAnalyzerPage() {
     } catch (err: any) {
       console.error("Resume analysis error:", err);
       setErrorMessage(err.message || "An unexpected error occurred during analysis.");
+      setAnalysisResult(null);
     } finally {
       setIsLoading(false);
       setLoadingStep("");
+    }
+  };
+
+  const handleSelectPastAnalysis = (index: number) => {
+    setSelectedAnalysisIndex(index);
+    if (pastAnalyses[index]) {
+      setAnalysisResult(pastAnalyses[index]);
     }
   };
 
@@ -115,6 +204,7 @@ export default function ResumeAnalyzerPage() {
 **Date:** ${new Date().toLocaleDateString()}
 **Overall ATS Score:** ${analysisResult.atsScore} / 100
 **Target Role:** ${analysisResult.targetRoleIdentified || "Not specified"}
+**Database Persistence ID:** ${analysisResult.id || "Unsaved"}
 
 ---
 
@@ -164,7 +254,7 @@ ${analysisResult.bulletPointRewrites
   };
 
   return (
-    <div className="min-h-screen bg-[#08090C] text-gray-100 flex flex-col selection:bg-[#FFE600]/30 selection:text-white">
+    <div className="min-h-screen bg-transparent text-gray-100 flex flex-col selection:bg-[#FFE600]/30 selection:text-white">
       <Navbar />
 
       <main className="flex-1 pb-24 relative overflow-hidden">
@@ -183,7 +273,7 @@ ${analysisResult.bulletPointRewrites
               </span>
               <span className="text-white/20">•</span>
               <span className="text-xs text-gray-300 font-medium">
-                Google Gemini Engine
+                PostgreSQL Backed
               </span>
             </div>
 
@@ -207,8 +297,8 @@ ${analysisResult.bulletPointRewrites
                 <span>Google XYZ Formula Rewriting</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4 text-yellow-300" />
-                <span>Target Job Calibration</span>
+                <Database className="w-4 h-4 text-sky-400" />
+                <span>PostgreSQL Audit Retention</span>
               </div>
             </div>
           </div>
@@ -219,6 +309,8 @@ ${analysisResult.bulletPointRewrites
               onAnalyze={handleAnalyze}
               isLoading={isLoading}
               loadingStep={loadingStep}
+              savedResumes={savedResumes}
+              initialResumeId={urlResumeId}
             />
 
             {errorMessage && (
@@ -239,13 +331,19 @@ ${analysisResult.bulletPointRewrites
               className="space-y-8 pt-8 border-t border-white/[0.08] animate-in fade-in duration-300"
             >
               {/* Dashboard Actions Bar */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-[#121316] border border-white/[0.08] shadow-md">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-2xl bg-[#121316] border border-white/[0.08] shadow-md">
                 <div className="space-y-1">
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
                     <h2 className="text-lg font-bold text-white tracking-tight">
                       Resume Diagnostic Results
                     </h2>
+                    {analysisResult.id && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-bold">
+                        <Database className="w-3 h-3" />
+                        <span>PostgreSQL Synced</span>
+                      </span>
+                    )}
                   </div>
                   <p className="text-xs text-gray-400">
                     Source: <strong className="text-gray-200">{fileName || "Uploaded Resume"}</strong> • Calibrated for top ATS platforms
@@ -253,22 +351,50 @@ ${analysisResult.bulletPointRewrites
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
+                  {pastAnalyses.length > 1 && (
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.05] border border-white/[0.1] text-xs text-gray-300">
+                      <History className="w-3.5 h-3.5 text-[#FFE600]" />
+                      <span className="text-[11px] text-gray-400">Audit History:</span>
+                      <select
+                        value={selectedAnalysisIndex}
+                        onChange={(e) => handleSelectPastAnalysis(Number(e.target.value))}
+                        className="bg-transparent text-white font-semibold focus:outline-none cursor-pointer"
+                      >
+                        {pastAnalyses.map((item, idx) => (
+                          <option key={item.id || idx} value={idx} className="bg-[#121316] text-white">
+                            Score: {item.atsScore}% ({item.createdAt ? new Date(item.createdAt).toLocaleDateString() : `#${idx + 1}`})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {analysisResult.resumeId && (
+                    <Link
+                      href={`/resume-builder?resumeId=${analysisResult.resumeId}`}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#FFE600] hover:bg-[#FFD000] text-black text-xs font-black transition-all shadow-[0_0_20px_rgba(255,230,0,0.3)] cursor-pointer"
+                    >
+                      <FileText className="w-4 h-4" />
+                      <span>Edit in Resume Builder</span>
+                    </Link>
+                  )}
+
                   <button
                     type="button"
                     onClick={handleExportMarkdown}
                     className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.1] text-xs font-bold text-gray-200 transition-colors cursor-pointer"
                   >
                     <Download className="w-4 h-4 text-[#FFE600]" />
-                    <span>Export Report (.md)</span>
+                    <span>Export (.md)</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={handleReset}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#FFE600] hover:bg-[#FFD000] text-black text-xs font-black transition-all shadow-[0_0_20px_rgba(255,230,0,0.3)] cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.1] text-gray-200 text-xs font-bold transition-all cursor-pointer"
                   >
                     <RotateCcw className="w-4 h-4" />
-                    <span>Analyze Another</span>
+                    <span>New Scan</span>
                   </button>
                 </div>
               </div>
@@ -304,24 +430,34 @@ ${analysisResult.bulletPointRewrites
                 <div className="space-y-2 text-left">
                   <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FFE600]/15 text-[#FFE600] text-xs font-bold">
                     <Award className="w-3.5 h-3.5" />
-                    <span>Ready for Applications?</span>
+                    <span>Ready to improve your score?</span>
                   </div>
                   <h3 className="text-2xl font-black text-white">
-                    Apply Rewritten Bullets & Re-scan to hit 95+
+                    Apply Rewritten Bullets in the Builder & Re-scan
                   </h3>
                   <p className="text-xs sm:text-sm text-gray-300 max-w-xl leading-relaxed">
-                    Update your resume document with the suggested keywords and Google XYZ bullet replacements, then upload again to verify your 95%+ Tier-1 ATS ranking.
+                    Update your resume with the suggested keywords and Google XYZ bullet replacements directly in the live builder, then run another scan to verify your 95%+ Tier-1 ATS ranking.
                   </p>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={handleReset}
-                  className="shrink-0 inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-[#FFE600] hover:bg-[#FFD000] text-black font-extrabold text-sm shadow-[0_0_30px_rgba(255,230,0,0.35)] hover:shadow-[0_0_40px_rgba(255,230,0,0.55)] transition-all cursor-pointer active:scale-95"
-                >
-                  <span>Re-scan Updated Resume</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
+                {analysisResult.resumeId ? (
+                  <Link
+                    href={`/resume-builder?resumeId=${analysisResult.resumeId}`}
+                    className="shrink-0 inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-[#FFE600] hover:bg-[#FFD000] text-black font-extrabold text-sm shadow-[0_0_30px_rgba(255,230,0,0.35)] hover:shadow-[0_0_40px_rgba(255,230,0,0.55)] transition-all cursor-pointer active:scale-95"
+                  >
+                    <span>Open in Resume Builder</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleReset}
+                    className="shrink-0 inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-[#FFE600] hover:bg-[#FFD000] text-black font-extrabold text-sm shadow-[0_0_30px_rgba(255,230,0,0.35)] hover:shadow-[0_0_40px_rgba(255,230,0,0.55)] transition-all cursor-pointer active:scale-95"
+                  >
+                    <span>Re-scan Updated Resume</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                )}
               </div>
             </div>
           )}
@@ -330,5 +466,22 @@ ${analysisResult.bulletPointRewrites
 
       <Footer />
     </div>
+  );
+}
+
+export default function ResumeAnalyzerPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-transparent text-gray-100 flex items-center justify-center">
+          <div className="flex items-center gap-3">
+            <Loader2 className="w-6 h-6 animate-spin text-[#FFE600]" />
+            <span className="text-sm font-semibold text-gray-400">Loading Resume Analyzer...</span>
+          </div>
+        </div>
+      }
+    >
+      <ResumeAnalyzerContent />
+    </Suspense>
   );
 }

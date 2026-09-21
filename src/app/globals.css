@@ -1,13 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  --background: #08090c;
+  --background: #070913;
   --foreground: #f3f4f6;
   --yellow-accent: #ffe600;
   --yellow-hover: #ffea00;
-  --yellow-glow: rgba(255, 230, 0, 0.25);
-  --card-bg: #121316;
-  --card-border: rgba(255, 255, 255, 0.08);
+  --yellow-glow: rgba(255, 230, 0, 0.2);
+  --card-bg: #111216;
+  --card-border: rgba(255, 255, 255, 0.07);
 }
 
 @theme inline {
@@ -15,8 +15,9 @@
   --color-foreground: var(--foreground);
   --color-cyber-yellow: #ffe600;
   --color-cyber-yellow-hover: #ffd700;
-  --color-card-dark: #121316;
-  --color-card-dark-hover: #17181c;
+  --color-card-dark: #111216;
+  --color-card-border: var(--card-border);
+  --color-card-dark-hover: #15171c;
   --font-sans: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
   --font-mono: var(--font-geist-mono), monospace;
 }
@@ -26,47 +27,63 @@ html {
 }
 
 body {
-  background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
   overflow-x: hidden;
-  selection-background-color: rgba(255, 230, 0, 0.3);
+  selection-background-color: rgba(255, 230, 0, 0.25);
   selection-color: #000000;
 }
 
+/* Fullscreen Grid Dots Overlay */
+.bg-grid-overlay {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Constellation Canvas Viewport */
+[id^="constellation-"],
+[id^="constellation-"] canvas {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+  pointer-events: none !important;
+}
+
 ::selection {
-  background-color: rgba(255, 230, 0, 0.35);
+  background-color: rgba(255, 230, 0, 0.25);
   color: #ffffff;
 }
 
-/* Custom Yellow Glows & Cards */
+/* Minimalist Dark Surfaces & Cards */
 .cyber-card {
-  background-color: #121316;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  background-color: #111216;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .cyber-card:hover {
-  border-color: rgba(255, 230, 0, 0.4);
-  box-shadow: 0 10px 30px -10px rgba(255, 230, 0, 0.15);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
   transform: translateY(-2px);
 }
 
 .glow-yellow-sm {
-  box-shadow: 0 0 20px -5px rgba(255, 230, 0, 0.3);
+  box-shadow: 0 0 18px -4px rgba(255, 230, 0, 0.2);
 }
 
 .glow-yellow-md {
-  box-shadow: 0 0 35px -8px rgba(255, 230, 0, 0.4);
+  box-shadow: 0 0 28px -6px rgba(255, 230, 0, 0.25);
 }
 
 .glow-yellow-lg {
-  box-shadow: 0 0 60px -10px rgba(255, 230, 0, 0.25);
+  box-shadow: 0 0 45px -8px rgba(255, 230, 0, 0.2);
 }
 
-/* Yellow Gradient Texts */
+/* Gradient Texts */
 .gradient-text-yellow {
-  background: linear-gradient(135deg, #ffffff 0%, #fff066 45%, #ffe600 100%);
+  background: linear-gradient(135deg, #ffffff 0%, #fff38a 50%, #ffe600 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -79,20 +96,21 @@ body {
 
 /* Background Patterns */
 .bg-grid-pattern {
-  background-size: 36px 36px;
+  background-size: 32px 32px;
   background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
 }
 
 .bg-dot-pattern {
   background-size: 24px 24px;
-  background-image: radial-gradient(rgba(255, 230, 0, 0.08) 1px, transparent 1px);
+  background-image: radial-gradient(rgba(255, 230, 0, 0.05) 1px, transparent 1px);
 }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 7px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -100,10 +118,68 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #23242a;
+  background: #1f2127;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #ffe600;
+  background: #2d3039;
+}
+
+/* Infinite Marquee Wall Animations */
+@keyframes marquee-scroll-left {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes marquee-scroll-right {
+  0% {
+    transform: translate3d(-50%, 0, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.animate-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee-scroll-left 55s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee-row-1 {
+  display: flex;
+  width: max-content;
+  animation: marquee-scroll-left 48s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee-row-2 {
+  display: flex;
+  width: max-content;
+  animation: marquee-scroll-right 56s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee-row-3 {
+  display: flex;
+  width: max-content;
+  animation: marquee-scroll-left 52s linear infinite;
+  will-change: transform;
+}
+
+.pause-hover:hover {
+  animation-play-state: paused !important;
+}
+
+.group-pause:hover .animate-marquee-track,
+.group-pause:hover .animate-marquee-row-1,
+.group-pause:hover .animate-marquee-row-2,
+.group-pause:hover .animate-marquee-row-3 {
+  animation-play-state: paused !important;
 }
