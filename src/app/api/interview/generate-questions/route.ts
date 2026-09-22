@@ -49,11 +49,24 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json(result, { status: 200 });
-  } catch (error: unknown) {
+  } catch (error: any) {
     console.error("API /api/interview/generate-questions error:", error);
+
+    if (error?.code === "PREMIUM_REQUIRED" || error?.name === "PremiumRequiredError") {
+      return NextResponse.json(
+        {
+          success: false,
+          code: "PREMIUM_REQUIRED",
+          error: error.message || "You have reached your free limit. Upgrade to Premium for unlimited access.",
+          message: error.message || "You have reached your free limit. Upgrade to Premium for unlimited access.",
+        },
+        { status: 403 }
+      );
+    }
+
     const message = error instanceof Error ? error.message : "An unexpected error occurred while generating questions.";
     return NextResponse.json(
-      { error: message },
+      { success: false, error: message },
       { status: 500 }
     );
   }

@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Navbar, Footer } from "@/components/shared";
+import { Navbar, Footer, UpgradeModal } from "@/components/shared";
 import {
   ResumeUploader,
   ScoreGauge,
@@ -39,6 +39,7 @@ function ResumeAnalyzerContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showUpgrade, setShowUpgrade] = useState(false);
   const [fileName, setFileName] = useState<string>("");
   const resultsRef = useRef<HTMLDivElement>(null);
 
@@ -148,7 +149,10 @@ function ResumeAnalyzerContent() {
       const data = await response.json();
 
       if (!response.ok || !data.success) {
-        throw new Error(data.error || "Failed to analyze resume. Please try again.");
+        if (data?.code === "PREMIUM_REQUIRED") {
+          setShowUpgrade(true);
+        }
+        throw new Error(data.error || data.message || "Failed to analyze resume. Please try again.");
       }
 
       const result: ResumeAnalysisResult = data.data;
@@ -463,6 +467,12 @@ ${analysisResult.bulletPointRewrites
           )}
         </div>
       </main>
+
+      <UpgradeModal
+        isOpen={showUpgrade}
+        onClose={() => setShowUpgrade(false)}
+        feature="analysis"
+      />
 
       <Footer />
     </div>
