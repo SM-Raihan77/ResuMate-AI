@@ -51,6 +51,19 @@ export async function POST(request: NextRequest) {
     );
   } catch (error: any) {
     console.error("Error creating resume:", error);
+
+    if (error?.code === "PREMIUM_REQUIRED" || error?.name === "PremiumRequiredError") {
+      return NextResponse.json(
+        {
+          success: false,
+          code: "PREMIUM_REQUIRED",
+          error: error.message || "You have reached your free limit. Upgrade to Premium for unlimited access.",
+          message: error.message || "You have reached your free limit. Upgrade to Premium for unlimited access.",
+        },
+        { status: 403 }
+      );
+    }
+
     return NextResponse.json(
       {
         success: false,

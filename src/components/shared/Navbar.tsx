@@ -169,6 +169,17 @@ export default function Navbar(): React.JSX.Element {
             Mock Interview
           </Link>
 
+          <Link
+            href="/pricing"
+            className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+              isActive("/pricing")
+                ? "text-white bg-white/[0.08] font-semibold"
+                : "text-neutral-400 hover:text-white hover:bg-white/[0.02] font-medium"
+            }`}
+          >
+            Pricing
+          </Link>
+
           {/* Dropdown Menu ("Features") */}
           <div
             className="relative"
@@ -488,6 +499,18 @@ export default function Navbar(): React.JSX.Element {
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Mock Interview
+            </Link>
+
+            <Link
+              href="/pricing"
+              className={`block px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                isActive("/pricing")
+                  ? "bg-white/[0.08] text-white font-semibold"
+                  : "text-neutral-300 hover:bg-neutral-800/60 hover:text-white font-medium"
+              }`}
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Pricing
             </Link>
 
             <Link

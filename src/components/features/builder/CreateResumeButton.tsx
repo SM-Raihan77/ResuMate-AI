@@ -6,6 +6,7 @@ import { useSession } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
 import { Plus, Loader2 } from "lucide-react";
+import { UpgradeModal } from "@/components/shared/UpgradeModal";
 
 interface CreateResumeButtonProps {
   className?: string;
@@ -27,6 +28,7 @@ export function CreateResumeButton({
   const router = useRouter();
   const { data: session } = useSession();
   const [isCreating, setIsCreating] = useState(false);
+  const [showUpgrade, setShowUpgrade] = useState(false);
 
   const handleCreate = async () => {
     if (!session) {
@@ -58,6 +60,11 @@ export function CreateResumeButton({
       const data = await response.json();
 
       if (!response.ok || !data.success || !data.id) {
+        if (data?.code === "PREMIUM_REQUIRED") {
+          const err: any = new Error(data.message || "Free limit reached.");
+          err.code = "PREMIUM_REQUIRED";
+          throw err;
+        }
         throw new Error(data.error || "Failed to create resume.");
       }
 
@@ -70,11 +77,15 @@ export function CreateResumeButton({
       router.push(`/resume-builder?resumeId=${data.id}`);
     } catch (error: any) {
       console.error("CreateResumeButton error:", error);
-      toast.add({
-        type: "error",
-        title: "Error creating resume",
-        description: error.message || "Failed to create resume. Please try again.",
-      });
+      if (error?.code === "PREMIUM_REQUIRED") {
+        setShowUpgrade(true);
+      } else {
+        toast.add({
+          type: "error",
+          title: "Error creating resume",
+          description: error.message || "Failed to create resume. Please try again.",
+        });
+      }
       setIsCreating(false);
     }
   };
@@ -92,25 +103,33 @@ export function CreateResumeButton({
   }
 
   return (
-    <Button
-      type="button"
-      onClick={handleCreate}
-      disabled={isCreating}
-      className={`${baseStyle} ${className}`}
-    >
-      {isCreating ? (
-        <>
-          <Loader2 className="w-4 h-4 animate-spin shrink-0" />
-          <span>Initializing...</span>
-        </>
-      ) : children ? (
-        children
-      ) : (
-        <>
-          <Plus className="w-4 h-4 stroke-[2.5]" />
-          <span>{title}</span>
-        </>
-      )}
-    </Button>
+    <>
+      <Button
+        type="button"
+        onClick={handleCreate}
+        disabled={isCreating}
+        className={`${baseStyle} ${className}`}
+      >
+        {isCreating ? (
+          <>
+            <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+            <span>Initializing...</span>
+          </>
+        ) : children ? (
+          children
+        ) : (
+          <>
+            <Plus className="w-4 h-4 stroke-[2.5]" />
+            <span>{title}</span>
+          </>
+        )}
+      </Button>
+
+      <UpgradeModal
+        isOpen={showUpgrade}
+        onClose={() => setShowUpgrade(false)}
+        feature="resume"
+      />
+    </>
   );
 }

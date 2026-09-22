@@ -150,6 +150,54 @@ export function DashboardContainer() {
     };
   }, [reloadData]);
 
+  // Handle return from Stripe Checkout
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const url = new URL(window.location.href);
+    const billing = url.searchParams.get("billing");
+    const sessionId = url.searchParams.get("session_id");
+
+    if (billing === "success") {
+      triggerToast(
+        "🎉 Premium Plan Activated! Unlimited resumes, ATS analyses & mock interviews unlocked.",
+        "success"
+      );
+
+      const syncUrl = sessionId
+        ? `/api/subscription/status?session_id=${encodeURIComponent(sessionId)}`
+        : "/api/subscription/status";
+
+      fetch(syncUrl)
+        .then((res) => (res.ok ? res.json() : null))
+        .then(() => {
+          window.dispatchEvent(new Event(RESUMATE_DATA_UPDATE_EVENT));
+          reloadData();
+        })
+        .catch(() => {
+          reloadData();
+        });
+
+      url.searchParams.delete("billing");
+      url.searchParams.delete("session_id");
+      const nextQuery = url.searchParams.toString();
+      window.history.replaceState(
+        {},
+        "",
+        url.pathname + (nextQuery ? `?${nextQuery}` : "") + url.hash
+      );
+    } else if (billing === "canceled") {
+      triggerToast("Checkout was canceled. You remain on the Free Plan.", "info");
+      url.searchParams.delete("billing");
+      const nextQuery = url.searchParams.toString();
+      window.history.replaceState(
+        {},
+        "",
+        url.pathname + (nextQuery ? `?${nextQuery}` : "") + url.hash
+      );
+    }
+  }, [triggerToast, reloadData]);
+
   // Derived real data
   const activeResume =
     resumes.find((r) => r.id === activeResumeId) || resumes[0] || undefined;
