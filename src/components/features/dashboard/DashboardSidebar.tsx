@@ -17,9 +17,12 @@ import {
   UserCheck,
   Edit3,
   Activity,
+  Loader2,
+  ExternalLink,
 } from "lucide-react";
 import { signOut, useSession } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import { RESUMATE_DATA_UPDATE_EVENT } from "@/lib/dashboard-store";
 
 interface DashboardSidebarProps {
   isOpenMobile: boolean;
@@ -234,33 +237,8 @@ export function DashboardSidebar({
           })}
         </div>
 
-        {/* AI Capabilities Card / Credits */}
-        <div className="p-3.5 rounded-xl bg-neutral-900/80 border border-neutral-800 space-y-2.5">
-          <div className="flex items-center justify-between text-xs">
-            <div className="flex items-center gap-1.5 font-medium text-white">
-              <Zap className="w-3.5 h-3.5 text-[#FFE600] fill-[#FFE600]" />
-              <span>Gemini AI Engine</span>
-            </div>
-            <span className="text-[10px] text-[#FFE600] font-mono font-medium">Pro Tier</span>
-          </div>
-
-          <div className="space-y-1.5">
-            <div className="flex justify-between text-[11px] text-neutral-400">
-              <span>Weekly AI Credits</span>
-              <span className="text-neutral-200 font-mono font-medium">38 / 50</span>
-            </div>
-            <div className="h-1.5 w-full bg-neutral-800 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-[#FFE600] rounded-full"
-                style={{ width: "76%" }}
-              />
-            </div>
-          </div>
-
-          <p className="text-[10px] text-neutral-400 leading-tight">
-            ATS parsing & mock voice interviews reset weekly on Monday.
-          </p>
-        </div>
+        {/* Subscription & Usage Card */}
+        <SidebarBillingCard />
       </div>
 
       {/* User Profile & Footer Actions */}
@@ -320,3 +298,214 @@ export function DashboardSidebar({
     </>
   );
 }
+
+function SidebarBillingCard() {
+  const [usage, setUsage] = React.useState<{
+    isPremium: boolean;
+    plan: "FREE" | "PREMIUM";
+    status: string;
+    cancelAtPeriodEnd?: boolean;
+    currentPeriodEnd?: string | null;
+    resumes: { current: number; limit: number; isUnlimited: boolean };
+    analyses: { current: number; limit: number; isUnlimited: boolean };
+    interviews: { current: number; limit: number; isUnlimited: boolean };
+  } | null>(null);
+
+  const [portalLoading, setPortalLoading] = React.useState(false);
+  const [portalError, setPortalError] = React.useState<string | null>(null);
+
+  const fetchUsage = React.useCallback(() => {
+    fetch("/api/subscription/status")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.success && data?.data) {
+          setUsage(data.data);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  React.useEffect(() => {
+    fetchUsage();
+
+    const handleUpdate = () => {
+      fetchUsage();
+    };
+
+    window.addEventListener(RESUMATE_DATA_UPDATE_EVENT, handleUpdate);
+    window.addEventListener("storage", handleUpdate);
+
+    return () => {
+      window.removeEventListener(RESUMATE_DATA_UPDATE_EVENT, handleUpdate);
+      window.removeEventListener("storage", handleUpdate);
+    };
+  }, [fetchUsage]);
+
+  const handleManageSubscription = async () => {
+    try {
+      setPortalLoading(true);
+      setPortalError(null);
+
+      const res = await fetch("/api/stripe/portal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success || !data.url) {
+        throw new Error(data.error || "Failed to open Stripe billing portal.");
+      }
+
+      window.location.href = data.url;
+    } catch (err: any) {
+      console.error("Manage subscription error:", err);
+      setPortalError(err.message || "Unable to open billing portal.");
+      setPortalLoading(false);
+    }
+  };
+
+  if (!usage) {
+    return (
+      <div className="p-3.5 rounded-xl bg-neutral-900/80 border border-neutral-800 animate-pulse">
+        <div className="h-4 bg-neutral-800 rounded w-1/2 mb-2" />
+        <div className="h-2 bg-neutral-800 rounded w-full mb-1" />
+      </div>
+    );
+  }
+
+  if (usage.isPremium) {
+    const formattedEndDate = usage.currentPeriodEnd
+      ? new Date(usage.currentPeriodEnd).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })
+      : null;
+
+    return (
+      <div className="p-3.5 rounded-xl bg-gradient-to-b from-neutral-900 to-neutral-950 border border-[#FFE600]/30 space-y-2.5 shadow-sm">
+        <div className="flex items-center justify-between text-xs">
+          <div className="flex items-center gap-1.5 font-semibold text-white">
+            <Zap className="w-3.5 h-3.5 text-[#FFE600] fill-[#FFE600]" />
+            <span>Monthly Premium</span>
+          </div>
+          <span className={`text-[10px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${
+            usage.cancelAtPeriodEnd
+              ? "bg-amber-500/15 text-amber-400 border border-amber-500/30"
+              : "bg-[#FFE600]/15 text-[#FFE600] border border-[#FFE600]/30"
+          }`}>
+            {usage.cancelAtPeriodEnd ? "Canceling" : "Active"}
+          </span>
+        </div>
+
+        {usage.cancelAtPeriodEnd && formattedEndDate && (
+          <p className="text-[10px] text-amber-300/90 leading-tight">
+            Premium access active until {formattedEndDate}.
+          </p>
+        )}
+
+        <div className="space-y-1 text-[11px] text-neutral-300">
+          <div className="flex justify-between">
+            <span className="text-neutral-400">Resumes:</span>
+            <span className="text-[#FFE600] font-medium">Unlimited</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-neutral-400">Analyses:</span>
+            <span className="text-[#FFE600] font-medium">Unlimited</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-neutral-400">Interviews:</span>
+            <span className="text-[#FFE600] font-medium">Unlimited</span>
+          </div>
+        </div>
+
+        {portalError && (
+          <p className="text-[10px] text-red-400 leading-tight">
+            {portalError}
+          </p>
+        )}
+
+        <button
+          type="button"
+          onClick={handleManageSubscription}
+          disabled={portalLoading}
+          className="w-full flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-center text-[11px] font-medium text-neutral-200 hover:text-white transition-colors cursor-pointer disabled:opacity-50"
+        >
+          {portalLoading ? (
+            <>
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <span>Loading Portal...</span>
+            </>
+          ) : (
+            <>
+              <span>Manage Subscription</span>
+              <ExternalLink className="w-3 h-3 text-neutral-400" />
+            </>
+          )}
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-3.5 rounded-xl bg-neutral-900/80 border border-neutral-800 space-y-2.5">
+      <div className="flex items-center justify-between text-xs">
+        <div className="flex items-center gap-1.5 font-medium text-white">
+          <Zap className="w-3.5 h-3.5 text-neutral-400" />
+          <span>Free Plan</span>
+        </div>
+        <span className="text-[10px] text-neutral-400 font-mono font-medium">3/3 Limits</span>
+      </div>
+
+      <div className="space-y-1.5 text-[11px]">
+        <div className="flex justify-between text-neutral-400">
+          <span>Resumes</span>
+          <span className="text-neutral-200 font-mono font-medium">
+            {usage.resumes.current} / {usage.resumes.limit}
+          </span>
+        </div>
+        <div className="h-1 w-full bg-neutral-800 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-[#FFE600] rounded-full"
+            style={{ width: `${Math.min(100, (usage.resumes.current / usage.resumes.limit) * 100)}%` }}
+          />
+        </div>
+
+        <div className="flex justify-between text-neutral-400 pt-0.5">
+          <span>Analyses</span>
+          <span className="text-neutral-200 font-mono font-medium">
+            {usage.analyses.current} / {usage.analyses.limit}
+          </span>
+        </div>
+        <div className="h-1 w-full bg-neutral-800 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-[#FFE600] rounded-full"
+            style={{ width: `${Math.min(100, (usage.analyses.current / usage.analyses.limit) * 100)}%` }}
+          />
+        </div>
+
+        <div className="flex justify-between text-neutral-400 pt-0.5">
+          <span>Interviews</span>
+          <span className="text-neutral-200 font-mono font-medium">
+            {usage.interviews.current} / {usage.interviews.limit}
+          </span>
+        </div>
+        <div className="h-1 w-full bg-neutral-800 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-[#FFE600] rounded-full"
+            style={{ width: `${Math.min(100, (usage.interviews.current / usage.interviews.limit) * 100)}%` }}
+          />
+        </div>
+      </div>
+
+      <Link
+        href="/pricing"
+        className="block w-full py-1.5 px-2 rounded-lg bg-[#FFE600] hover:bg-[#FFE600]/90 text-center text-[11px] font-bold text-neutral-950 transition-colors shadow-sm"
+      >
+        Upgrade to Premium
+      </Link>
+    </div>
+  );
+}
+

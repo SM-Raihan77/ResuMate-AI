@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma";
+import { SubscriptionService } from "./subscription.service";
 import {
   generateInterviewQuestionsWithGemini,
   evaluateInterviewAnswerWithGemini,
@@ -59,31 +60,37 @@ export class InterviewService {
 
     let sessionId: string | undefined = undefined;
 
-    // Persist session into PostgreSQL if user is authenticated
+    // Persist session into PostgreSQL if user is authenticated and quota allows
     if (payload.userId) {
-      const session = await prisma.interviewSession.create({
-        data: {
-          userId: payload.userId,
-          resumeId: payload.resumeId || null,
-          role: payload.role.trim(),
-          difficulty,
-          interviewType,
-          status: "IN_PROGRESS",
-          totalQuestions: questions.length,
-          jobDescription: payload.jobDescription?.trim() || null,
-          questions: {
-            create: questions.map((q: any, idx: number) => ({
-              questionIndex: idx,
-              question: q.question,
-              category: q.category,
-              expectedKeywords: q.expectedKeywords || [],
-              context: q.context || null,
-              hint: q.hint || null,
-              sampleAnswer: q.sampleAnswer || null,
-            })),
-          },
-        },
-      });
+      const session = await SubscriptionService.executeWithQuotaCheck(
+        payload.userId,
+        "interview",
+        async (tx) => {
+          return await tx.interviewSession.create({
+            data: {
+              userId: payload.userId,
+              resumeId: payload.resumeId || null,
+              role: payload.role.trim(),
+              difficulty,
+              interviewType,
+              status: "IN_PROGRESS",
+              totalQuestions: questions.length,
+              jobDescription: payload.jobDescription?.trim() || null,
+              questions: {
+                create: questions.map((q: any, idx: number) => ({
+                  questionIndex: idx,
+                  question: q.question,
+                  category: q.category,
+                  expectedKeywords: q.expectedKeywords || [],
+                  context: q.context || null,
+                  hint: q.hint || null,
+                  sampleAnswer: q.sampleAnswer || null,
+                })),
+              },
+            },
+          });
+        }
+      );
       sessionId = session.id;
     }
 

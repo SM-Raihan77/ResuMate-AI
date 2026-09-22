@@ -185,8 +185,21 @@ export async function POST(request: NextRequest) {
       { error: "Unsupported Content-Type. Please send multipart/form-data or application/json." },
       { status: 415 }
     );
-  } catch (error: unknown) {
+  } catch (error: any) {
     console.error("API /api/analyze-resume POST error:", error);
+
+    if (error?.code === "PREMIUM_REQUIRED" || error?.name === "PremiumRequiredError") {
+      return NextResponse.json(
+        {
+          success: false,
+          code: "PREMIUM_REQUIRED",
+          error: error.message || "You have reached your free limit. Upgrade to Premium for unlimited access.",
+          message: error.message || "You have reached your free limit. Upgrade to Premium for unlimited access.",
+        },
+        { status: 403 }
+      );
+    }
+
     const message = error instanceof Error ? error.message : "An unexpected error occurred while analyzing the resume.";
     return NextResponse.json(
       { success: false, error: message },

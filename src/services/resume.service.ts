@@ -4,6 +4,7 @@ import { validateResumeDocument } from "@/lib/resume-validator";
 import { ResumeAnalysisResult } from "@/types/analyzer";
 import { ResumeBuilderState, INITIAL_RESUME_DATA } from "@/types/builder";
 import prisma from "@/lib/prisma";
+import { SubscriptionService } from "./subscription.service";
 
 export interface AnalyzeResumeServiceParams {
   file?: {
@@ -76,69 +77,72 @@ export class ResumeService {
 
     // 3. If authenticated, persist analysis report into PostgreSQL
     if (params.userId) {
-      let targetResumeId = params.resumeId;
+      await SubscriptionService.executeWithQuotaCheck(params.userId, "analysis", async (tx) => {
+        let targetResumeId = params.resumeId;
 
-      if (targetResumeId) {
-        const existing = await prisma.resume.findFirst({
-          where: {
-            id: targetResumeId,
-            userId: params.userId,
-          },
-        });
+        if (targetResumeId) {
+          const existing = await tx.resume.findFirst({
+            where: {
+              id: targetResumeId,
+              userId: params.userId,
+            },
+          });
 
-        if (!existing) {
-          throw new Error("Target resume not found or unauthorized.");
+          if (!existing) {
+            throw new Error("Target resume not found or unauthorized.");
+          }
+        } else {
+          // Auto-create an audit resume record in PostgreSQL linked to analysis
+          const derivedTitle =
+            params.title?.trim() ||
+            (sourceFileName !== "Pasted Text"
+              ? sourceFileName.replace(/\.[^/.]+$/, "")
+              : `Audit Resume - ${new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" })}`);
+
+          const createdResume = await tx.resume.create({
+            data: {
+              userId: params.userId,
+              source: "analysis",
+              title: derivedTitle,
+              summary: analysis.overallFeedback || null,
+              atsScore: analysis.atsScore,
+              template: "modern",
+              accentColor: "#FFE600",
+              fontFamily: "sans",
+              spacing: "normal",
+            },
+          });
+          targetResumeId = createdResume.id;
         }
-      } else {
-        // Auto-create a resume record in PostgreSQL so user can access it in the Builder
-        const derivedTitle =
-          params.title?.trim() ||
-          (sourceFileName !== "Pasted Text"
-            ? sourceFileName.replace(/\.[^/.]+$/, "")
-            : `Audit Resume - ${new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" })}`);
 
-        const createdResume = await prisma.resume.create({
+        // Persist the analysis report linked to Resume and User
+        const savedAnalysis = await tx.resumeAnalysis.create({
           data: {
             userId: params.userId,
-            title: derivedTitle,
-            summary: analysis.overallFeedback || null,
+            resumeId: targetResumeId,
             atsScore: analysis.atsScore,
-            template: "modern",
-            accentColor: "#FFE600",
-            fontFamily: "sans",
-            spacing: "normal",
+            scoreBreakdown: analysis.scoreBreakdown as any,
+            missingKeywords: analysis.missingKeywords || [],
+            matchedKeywords: analysis.matchedKeywords || [],
+            formattingIssues: analysis.formattingIssues || [],
+            bulletPointRewrites: analysis.bulletPointRewrites as any,
+            overallFeedback: analysis.overallFeedback || null,
+            targetRoleIdentified: analysis.targetRoleIdentified || null,
+            detectedExperienceLevel: analysis.detectedExperienceLevel || null,
           },
         });
-        targetResumeId = createdResume.id;
-      }
 
-      // Persist the analysis report linked to Resume and User
-      const savedAnalysis = await prisma.resumeAnalysis.create({
-        data: {
-          userId: params.userId,
-          resumeId: targetResumeId,
-          atsScore: analysis.atsScore,
-          scoreBreakdown: analysis.scoreBreakdown as any,
-          missingKeywords: analysis.missingKeywords || [],
-          matchedKeywords: analysis.matchedKeywords || [],
-          formattingIssues: analysis.formattingIssues || [],
-          bulletPointRewrites: analysis.bulletPointRewrites as any,
-          overallFeedback: analysis.overallFeedback || null,
-          targetRoleIdentified: analysis.targetRoleIdentified || null,
-          detectedExperienceLevel: analysis.detectedExperienceLevel || null,
-        },
+        // Update resume snapshot ATS score
+        await tx.resume.update({
+          where: { id: targetResumeId },
+          data: { atsScore: analysis.atsScore },
+        });
+
+        analysis.id = savedAnalysis.id;
+        analysis.resumeId = targetResumeId;
+        analysis.userId = params.userId;
+        analysis.createdAt = savedAnalysis.createdAt.toISOString();
       });
-
-      // Update resume snapshot ATS score
-      await prisma.resume.update({
-        where: { id: targetResumeId },
-        data: { atsScore: analysis.atsScore },
-      });
-
-      analysis.id = savedAnalysis.id;
-      analysis.resumeId = targetResumeId;
-      analysis.userId = params.userId;
-      analysis.createdAt = savedAnalysis.createdAt.toISOString();
     }
 
     return {
@@ -211,33 +215,36 @@ export class ResumeService {
     const seed = data?.initialData || INITIAL_RESUME_DATA;
     const personal = seed.personal || INITIAL_RESUME_DATA.personal;
 
-    return await prisma.resume.create({
-      data: {
-        userId,
-        title: data?.title?.trim() || "Untitled Resume",
-        description: data?.description?.trim() || null,
-        fullName: personal.fullName || null,
-        jobTitle: personal.jobTitle || null,
-        email: personal.email || null,
-        phone: personal.phone || null,
-        location: personal.location || null,
-        website: personal.website || null,
-        linkedin: personal.linkedin || null,
-        github: personal.github || null,
-        summary: personal.summary || null,
-        experience: (seed.experience as any) || [],
-        education: (seed.education as any) || [],
-        skills: (seed.skills as any) || [],
-        projects: (seed.projects as any) || [],
-        certifications: (seed.certifications as any) || [],
-        template: seed.template || "modern",
-        accentColor: seed.accentColor || "#FFE600",
-        fontFamily: seed.fontFamily || "sans",
-        spacing: seed.spacing || "normal",
-        colorHex: seed.accentColor || "#FFE600",
-        borderStyle: "squircle",
-        atsScore: 85,
-      },
+    return await SubscriptionService.executeWithQuotaCheck(userId, "resume", async (tx) => {
+      return await tx.resume.create({
+        data: {
+          userId,
+          source: "builder",
+          title: data?.title?.trim() || "Untitled Resume",
+          description: data?.description?.trim() || null,
+          fullName: personal.fullName || null,
+          jobTitle: personal.jobTitle || null,
+          email: personal.email || null,
+          phone: personal.phone || null,
+          location: personal.location || null,
+          website: personal.website || null,
+          linkedin: personal.linkedin || null,
+          github: personal.github || null,
+          summary: personal.summary || null,
+          experience: (seed.experience as any) || [],
+          education: (seed.education as any) || [],
+          skills: (seed.skills as any) || [],
+          projects: (seed.projects as any) || [],
+          certifications: (seed.certifications as any) || [],
+          template: seed.template || "modern",
+          accentColor: seed.accentColor || "#FFE600",
+          fontFamily: seed.fontFamily || "sans",
+          spacing: seed.spacing || "normal",
+          colorHex: seed.accentColor || "#FFE600",
+          borderStyle: "squircle",
+          atsScore: 85,
+        },
+      });
     });
   }
 

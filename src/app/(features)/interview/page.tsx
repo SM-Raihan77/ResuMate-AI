@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { Navbar, Footer } from "@/components/shared";
+import { Navbar, Footer, UpgradeModal } from "@/components/shared";
 import {
   InterviewSetup,
   InterviewRoom,
@@ -46,6 +46,7 @@ function MockInterviewContent() {
   const [isLoadingQuestions, setIsLoadingQuestions] = useState<boolean>(false);
   const [isEvaluatingReport, setIsEvaluatingReport] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showUpgrade, setShowUpgrade] = useState<boolean>(false);
 
   const stageRef = useRef<HTMLDivElement>(null);
 
@@ -137,7 +138,10 @@ function MockInterviewContent() {
       const data = await response.json();
 
       if (!response.ok || !data.success || !data.questions || data.questions.length === 0) {
-        throw new Error(data.error || "Failed to generate interview questions. Please try again.");
+        if (data?.code === "PREMIUM_REQUIRED") {
+          setShowUpgrade(true);
+        }
+        throw new Error(data.error || data.message || "Failed to generate interview questions. Please try again.");
       }
 
       setQuestions(data.questions);
@@ -313,6 +317,12 @@ function MockInterviewContent() {
           </div>
         </div>
       </main>
+
+      <UpgradeModal
+        isOpen={showUpgrade}
+        onClose={() => setShowUpgrade(false)}
+        feature="interview"
+      />
 
       <Footer />
     </div>
